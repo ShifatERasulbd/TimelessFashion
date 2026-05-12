@@ -34,7 +34,9 @@ const Users     = lazyWithRetry(() => import('@/pages/User/user'), 'users');
 const AddUser   = lazyWithRetry(() => import('@/pages/User/addUser'), 'add-user');
 const EditUser  = lazyWithRetry(() => import('@/pages/User/editUser'), 'edit-user');
 // Hero Management
-const Hero      = lazyWithRetry(() => import('@/pages/Hero/hero'), 'hero');
+const Heroes    = lazyWithRetry(() => import('@/pages/Hero/hero'), 'hero');
+const AddHero   = lazyWithRetry(() => import('@/pages/Hero/addHero'), 'add-hero');
+const EditHero  = lazyWithRetry(() => import('@/pages/Hero/editHero'), 'edit-hero');
 
 
 export default function App() {
@@ -59,7 +61,9 @@ export default function App() {
                             <Route path="users/add" element={<AddUser />} />
                             <Route path="users/:id/edit" element={<EditUser />} />
                             {/* Hero  */}
-                            <Route path="hero" element={<Hero />} />
+                            <Route path="hero" element={<Heroes />} />
+                            <Route path="hero/add" element={<AddHero />} />
+                            <Route path="hero/:id/edit" element={<EditHero />} />
                         </Route>
 
                         <Route path="/" element={<main />} />

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\HeroController;
 use App\Http\Controllers\UserController;
 
 use Illuminate\Support\Facades\Route;
@@ -20,6 +21,7 @@ Route::prefix('api')->group(function () {
         Route::get('/user', [UserController::class, 'me']);
 
         Route::post('/logout', [AuthController::class, 'logout']);
+        Route::apiResource('/heroes', HeroController::class);
        
         
         // Season Controller
