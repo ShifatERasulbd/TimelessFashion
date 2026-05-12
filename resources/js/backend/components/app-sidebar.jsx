@@ -1,24 +1,8 @@
 import {
-    BarChart3,
-    Circle,
-    FileBarChart2,
-    FolderKanban,
     Gauge,
-    Boxes ,
-    CreditCard,
-    Banknote,
-    ClipboardPlus ,
-    Globe,
-    LifeBuoy,
+    Sparkles,
     LogOut,
-    Palette ,
-    Tag ,
-    MoreHorizontal,
-    Airplay,
-    Shirt,
-    Users,
-    Shield,
-    ChartBarDecreasing,
+  
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -38,15 +22,12 @@ import {
 
 const homeItems = [
     { title: 'Dashboard', icon: Gauge, path: '/admin/dashboard' },
-    { title: 'sldj', icon: Gauge, path: '/lsdj' },
-   
+      
 ];
 
-// const locationItems=[
-//     { title: 'Country', icon: Globe, path: '/countries' },
-//     { title: 'State', icon: Airplay, path: '/states' },
-//     { title: 'WareHouse', icon: BarChart3, path: '/warehouses' },
-// ]
+const websiteItems = [
+    { title: 'Hero', icon: Sparkles, path: '/admin/hero' },  
+]
 
 
 
@@ -55,8 +36,7 @@ export function AppSidebar(props) {
     const location = useLocation();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-    const visibleHomeItems = homeItems;
-    // const visibleLocationItems = locationItems;
+   
     
 
     const handleLogout = async () => {
@@ -99,12 +79,12 @@ export function AppSidebar(props) {
             </SidebarHeader>
 
             <SidebarContent className="scrollbar-hidden py-3">
-                {visibleHomeItems.length > 0 && (
+                {homeItems.length > 0 && (
                     <SidebarGroup>
                         <SidebarGroupLabel>Home</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {visibleHomeItems.map((item) => (
+                                {homeItems.map((item) => (
                                     <SidebarMenuItem key={item.title}>
                                         <SidebarMenuButton
                                             asChild
@@ -124,12 +104,12 @@ export function AppSidebar(props) {
                 )}
 
                 {/* location Management  */}
-                 {/* {visibleLocationItems.length > 0 && (
+                 {websiteItems.length > 0 && (
                     <SidebarGroup>
-                        <SidebarGroupLabel>Location Management</SidebarGroupLabel>
+                        <SidebarGroupLabel>Website Management</SidebarGroupLabel>
                         <SidebarGroupContent>
                             <SidebarMenu>
-                                {visibleLocationItems.map((item) => (
+                                {websiteItems.map((item) => (
                                     <SidebarMenuItem key={item.title}>
                                         <SidebarMenuButton
                                             asChild
@@ -146,7 +126,7 @@ export function AppSidebar(props) {
                             </SidebarMenu>
                         </SidebarGroupContent>
                     </SidebarGroup>
-                )} */}
+                )}
 
             
 

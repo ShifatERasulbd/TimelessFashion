@@ -29,9 +29,12 @@ function lazyWithRetry(importer, key) {
 }
 
 const Dashboard = lazyWithRetry(() => import('@/pages/dashboard'), 'dashboard');
+// User Management
 const Users     = lazyWithRetry(() => import('@/pages/User/user'), 'users');
 const AddUser   = lazyWithRetry(() => import('@/pages/User/addUser'), 'add-user');
 const EditUser  = lazyWithRetry(() => import('@/pages/User/editUser'), 'edit-user');
+// Hero Management
+const Hero      = lazyWithRetry(() => import('@/pages/Hero/hero'), 'hero');
 
 
 export default function App() {
@@ -48,15 +51,21 @@ export default function App() {
                                 </main>
                             }
                         />
-
+                        {/* user Managemnent */}
                         <Route path="/admin" element={<AppLayout />}>
                             <Route path="dashboard" element={<Dashboard />} />
+                            {/* user  */}
                             <Route path="users" element={<Users />} />
                             <Route path="users/add" element={<AddUser />} />
                             <Route path="users/:id/edit" element={<EditUser />} />
+                            {/* Hero  */}
+                            <Route path="hero" element={<Hero />} />
                         </Route>
 
                         <Route path="/" element={<main />} />
+
+                        {/* Hero Management */}
+                       
                     </Routes>
                 </Suspense>
             </BrowserRouter>
