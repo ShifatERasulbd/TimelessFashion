@@ -94,6 +94,20 @@ export default function Features() {
         [layers]
     );
 
+    const selectedTextLayer = useMemo(
+        () => activeTextLayers.find((layer) => layer.id === selectedObjectId) || null,
+        [activeTextLayers, selectedObjectId]
+    );
+
+    useEffect(() => {
+        if (!selectedTextLayer) return;
+
+        setDraftText(selectedTextLayer.text || '');
+        setDraftFontFamily(selectedTextLayer.fontFamily || 'Montserrat');
+        setDraftFontSize(Number(selectedTextLayer.fontSize || 24));
+        setDraftTextColor(selectedTextLayer.fill || '#111111');
+    }, [selectedTextLayer]);
+
     const updateHistoryFlags = () => {
         setCanUndo(historyRef.current.length > 1);
         setCanRedo(redoRef.current.length > 0);
@@ -856,6 +870,30 @@ export default function Features() {
         }
     };
 
+    const handleDraftFontFamilyChange = (fontFamily) => {
+        setDraftFontFamily(fontFamily);
+
+        if (selectedTextLayer) {
+            updateTextLayer(selectedTextLayer.id, { fontFamily });
+        }
+    };
+
+    const handleDraftFontSizeChange = (fontSize) => {
+        setDraftFontSize(fontSize);
+
+        if (selectedTextLayer) {
+            updateTextLayer(selectedTextLayer.id, { fontSize });
+        }
+    };
+
+    const handleDraftTextColorChange = (fill) => {
+        setDraftTextColor(fill);
+
+        if (selectedTextLayer) {
+            updateTextLayer(selectedTextLayer.id, { fill });
+        }
+    };
+
     const toggleLayerVisibility = (layerId) => {
         const canvas = getCanvas();
         const object = getObjectById(layerId);
@@ -1191,11 +1229,11 @@ export default function Features() {
                         draftText={draftText}
                         onDraftTextChange={setDraftText}
                         draftFontFamily={draftFontFamily}
-                        onDraftFontFamilyChange={setDraftFontFamily}
+                        onDraftFontFamilyChange={handleDraftFontFamilyChange}
                         draftFontSize={draftFontSize}
-                        onDraftFontSizeChange={setDraftFontSize}
+                        onDraftFontSizeChange={handleDraftFontSizeChange}
                         draftTextColor={draftTextColor}
-                        onDraftTextColorChange={setDraftTextColor}
+                        onDraftTextColorChange={handleDraftTextColorChange}
                         onAddText={handleAddText}
                         fontOptions={FONT_OPTIONS}
                         activeTextLayers={activeTextLayers}
