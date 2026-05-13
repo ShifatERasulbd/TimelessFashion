@@ -16,6 +16,12 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->nullOnDelete();
             $table->string('title')->nullable();
             $table->string('image_path');
+            $table->string('front_image_path')->nullable();
+            $table->string('back_image_path')->nullable();
+            $table->unsignedInteger('quantity')->default(1);
+            $table->decimal('unit_price', 10, 2)->default(0);
+            $table->decimal('total_price', 10, 2)->default(0);
+            $table->string('order_status', 50)->default('pending');
             $table->json('meta')->nullable();
             $table->timestamps();
         });

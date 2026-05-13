@@ -1,84 +1,22 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Canvas, Circle, FabricImage, IText, Rect } from 'fabric';
-import {
-    AlignCenter,
-    AlignLeft,
-    AlignRight,
-    ArrowLeft,
-    BringToFront,
-    Check,
-    Eye,
-    EyeOff,
-    ImagePlus,
-    Italic,
-    Layers3,
-    RotateCcw,
-    RotateCw,
-    SendToBack,
-    Share2,
-    Shapes,
-    Square,
-    Type,
-    Underline,
-    Upload,
-    Download,
-    ShoppingCart,
-    Trash2,
-    Bold,
-    Circle as CircleIcon,
-} from 'lucide-react';
 import { toast } from 'sonner';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import CanvasStage from './components/CanvasStage';
+import CustomizePanel from './components/CustomizePanel';
+import LeftToolbar from './components/LeftToolbar';
+import PageHeader from './components/PageHeader';
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
-import { cn } from '@/lib/utils';
-
-const CANVAS_WIDTH = 760;
-const CANVAS_HEIGHT = 760;
-const PRODUCT_PRICE = '$49.99';
-const HISTORY_LIMIT = 40;
-const SERIALIZED_PROPS = ['objectId', 'viewId', 'layerType', 'layerName', 'designId', 'sourceName', 'shapeKind', 'isBaseImage', 'hiddenByUser'];
-
-const FONT_OPTIONS = ['Bebas Neue', 'Montserrat', 'Oswald', 'Poppins', 'Georgia', 'Arial'];
-
-const PRODUCT_COLORS = [
-    { id: 'black', label: 'Black', value: '#111111' },
-    { id: 'navy', label: 'Navy', value: '#17336f' },
-    { id: 'red', label: 'Red', value: '#c91d3b' },
-    { id: 'gray', label: 'Gray', value: '#c7c7cc' },
-    { id: 'white', label: 'White', value: '#ffffff' },
-];
-
-const PRODUCT_VIEWS = [
-    {
-        id: 'front',
-        label: 'Front',
-        url: '/storage/product_personalization/product_1/front.jpeg',
-    },
-    {
-        id: 'back',
-        label: 'Back',
-        url: '/storage/product_personalization/product_1/back.jpeg',
-    },
-];
-
-const TOOL_ITEMS = [
-    { id: 'upload', label: 'Upload', icon: Upload },
-    { id: 'text', label: 'Text', icon: Type },
-    { id: 'images', label: 'Images', icon: ImagePlus },
-    { id: 'shapes', label: 'Shapes', icon: Shapes },
-    { id: 'undo', label: 'Undo', icon: RotateCcw, action: true },
-    { id: 'redo', label: 'Redo', icon: RotateCw, action: true },
-    { id: 'layers', label: 'Layers', icon: Layers3 },
-];
+    CANVAS_HEIGHT,
+    CANVAS_WIDTH,
+    FONT_OPTIONS,
+    HISTORY_LIMIT,
+    PRODUCT_COLORS,
+    PRODUCT_PRICE,
+    PRODUCT_VIEWS,
+    SERIALIZED_PROPS,
+} from './config';
 
 async function ensureCsrfCookie() {
     await fetch('/sanctum/csrf-cookie', {
@@ -120,28 +58,8 @@ function getLayerLabel(object) {
     return object?.get?.('layerName') || 'Shape';
 }
 
-function ToolbarButton({ active, icon: Icon, label, onClick, disabled = false }) {
-    return (
-        <button
-            type="button"
-            onClick={onClick}
-            disabled={disabled}
-            className={cn(
-                'group flex min-w-[58px] flex-col items-center gap-2 rounded-2xl border px-2 py-3 text-[11px] font-medium transition-colors',
-                active
-                    ? 'border-zinc-900 bg-zinc-900 text-white shadow-sm'
-                    : 'border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300 hover:text-zinc-900',
-                disabled && 'cursor-not-allowed opacity-50'
-            )}
-            aria-label={label}
-        >
-            <Icon className="size-4" />
-            <span>{label}</span>
-        </button>
-    );
-}
-
 export default function Features() {
+    const navigate = useNavigate();
     const canvasRef = useRef(null);
     const fabricRef = useRef(null);
     const productRef = useRef(null);
@@ -162,9 +80,11 @@ export default function Features() {
     const [uploadedDesigns, setUploadedDesigns] = useState([]);
     const [selectedDesignId, setSelectedDesignId] = useState(null);
     const [layers, setLayers] = useState([]);
+    const [usedDesignIds, setUsedDesignIds] = useState(new Set());
     const [selectedObjectId, setSelectedObjectId] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
     const [savedUrl, setSavedUrl] = useState('');
+    const [orderQuantity, setOrderQuantity] = useState(1);
     const [canUndo, setCanUndo] = useState(false);
     const [canRedo, setCanRedo] = useState(false);
 
@@ -267,6 +187,13 @@ export default function Features() {
 
         setLayers(nextLayers);
         setSelectedObjectId(activeObjectId);
+
+        const presentDesignIds = new Set(
+            getAllDesignObjects()
+                .map((object) => object.get?.('designId'))
+                .filter(Boolean)
+        );
+        setUsedDesignIds(presentDesignIds);
     };
 
     const applyViewVisibility = (viewId) => {
@@ -780,16 +707,24 @@ export default function Features() {
 
     const handleSaveOrderDesign = async () => {
         const canvas = getCanvas();
-        if (!canvas) return;
+        if (!canvas) return null;
 
         setIsSaving(true);
         try {
             await ensureCsrfCookie();
 
-            const imageData = canvas.toDataURL({
+            const [frontImageData, backImageData] = await Promise.all([
+                renderViewDataUrl(PRODUCT_VIEWS[0]),
+                renderViewDataUrl(PRODUCT_VIEWS[1]),
+            ]);
+
+            const imageData = frontImageData || backImageData || canvas.toDataURL({
                 format: 'png',
                 multiplier: 2,
             });
+
+            const unitPriceNumber = Number((PRODUCT_PRICE || '').replace(/[^0-9.]/g, '')) || 0;
+            const totalPrice = unitPriceNumber * orderQuantity;
 
             const response = await fetch('/api/personalizations', {
                 method: 'POST',
@@ -801,7 +736,13 @@ export default function Features() {
                 },
                 body: JSON.stringify({
                     image: imageData,
+                    front_image: frontImageData,
+                    back_image: backImageData,
                     title: 'Customized Product Design',
+                    quantity: orderQuantity,
+                    unit_price: unitPriceNumber,
+                    total_price: totalPrice,
+                    order_status: 'pending',
                 }),
             });
 
@@ -810,13 +751,42 @@ export default function Features() {
                 throw new Error(data?.message || 'Failed to save design.');
             }
 
-            setSavedUrl(data?.data?.image_url || '');
+            const imageUrl = data?.data?.image_url || '';
+            setSavedUrl(imageUrl);
+
+            const orderDetails = {
+                imageUrl,
+                frontImageUrl: data?.data?.front_image_url || imageUrl,
+                backImageUrl: data?.data?.back_image_url || '',
+                quantity: orderQuantity,
+                unitPrice: PRODUCT_PRICE,
+                totalPrice: `$${totalPrice.toFixed(2)}`,
+                orderStatus: data?.data?.order_status || 'pending',
+                productColor,
+                view: activeViewRef.current,
+                createdAt: new Date().toISOString(),
+            };
+
+            sessionStorage.setItem('personalizer:pendingOrder', JSON.stringify(orderDetails));
             toast.success('Design saved successfully.');
+            return orderDetails;
         } catch (error) {
             toast.error(error.message || 'Unable to save design.');
+            return null;
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleOrderNow = async () => {
+        const orderDetails = await handleSaveOrderDesign();
+        if (!orderDetails) return;
+
+        navigate('/personalizer/confirm-order', {
+            state: {
+                orderDetails,
+            },
+        });
     };
 
     const handleShare = async () => {
@@ -884,399 +854,66 @@ export default function Features() {
             />
 
             <div className="mx-auto flex min-h-screen max-w-[1600px] flex-col px-4 py-4 lg:px-6 xl:px-8">
-                <header className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-3xl border border-zinc-200/80 bg-white/90 px-4 py-3 shadow-sm backdrop-blur">
-                    <a href="/" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-950">
-                        <ArrowLeft className="size-4" />
-                        <span>Back to shop</span>
-                    </a>
+                <PageHeader
+                    isSaving={isSaving}
+                    onSaveDesign={handleSaveOrderDesign}
+                    onShare={handleShare}
+                />
 
-                    <div className="flex items-center gap-2">
-                        <Button type="button" variant="outline" onClick={handleSaveOrderDesign} disabled={isSaving}>
-                            {isSaving ? 'Saving...' : 'Save design'}
-                        </Button>
-                        <Button type="button" variant="outline" onClick={handleShare}>
-                            <Share2 className="size-4" />
-                            Share
-                        </Button>
-                    </div>
-                </header>
+                <div className="grid flex-1 gap-4 xl:grid-cols-[88px_minmax(0,1.45fr)_380px]">
+                    <LeftToolbar
+                        activeTool={activeTool}
+                        canUndo={canUndo}
+                        canRedo={canRedo}
+                        onSelectTool={handleToolbarSelect}
+                    />
 
-                <div className="grid flex-1 gap-4 xl:grid-cols-[88px_minmax(0,1.45fr)_380px_220px]">
-                    <aside className="rounded-[28px] border border-zinc-200 bg-white p-3 shadow-sm xl:sticky xl:top-6 xl:h-fit">
-                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-7 xl:grid-cols-1">
-                            {TOOL_ITEMS.map((tool) => (
-                                <ToolbarButton
-                                    key={tool.id}
-                                    icon={tool.icon}
-                                    label={tool.label}
-                                    active={activeTool === tool.id && !tool.action}
-                                    disabled={(tool.id === 'undo' && !canUndo) || (tool.id === 'redo' && !canRedo)}
-                                    onClick={() => handleToolbarSelect(tool.id)}
-                                />
-                            ))}
-                        </div>
-                    </aside>
+                    <CanvasStage
+                        canvasRef={canvasRef}
+                        productViews={PRODUCT_VIEWS}
+                        activeView={activeView}
+                        onSwitchView={handleSwitchView}
+                    />
 
-                    <section className="overflow-hidden rounded-[32px] border border-zinc-200 bg-white shadow-sm">
-                        <div className="flex h-full flex-col">
-                            <div className="flex-1 bg-[radial-gradient(circle_at_top,#ffffff,transparent_45%),linear-gradient(180deg,#f7f6f2_0%,#f2f0ea_100%)] p-4 sm:p-6">
-                                <div className="mx-auto flex h-full max-w-[860px] items-center justify-center rounded-[30px] border border-zinc-200/60 bg-white shadow-inner">
-                                    <canvas
-                                        ref={canvasRef}
-                                        className="block max-h-full max-w-full rounded-[28px]"
-                                        style={{ width: '100%', height: 'auto', aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="border-t border-zinc-200 bg-white px-4 py-4 sm:px-6">
-                                <div className="flex flex-wrap gap-3">
-                                    {PRODUCT_VIEWS.map((view) => (
-                                        <button
-                                            key={view.id}
-                                            type="button"
-                                            onClick={() => handleSwitchView(view)}
-                                            className={cn(
-                                                'rounded-2xl border p-2 transition-colors',
-                                                activeView === view.id
-                                                    ? 'border-zinc-950 shadow-sm'
-                                                    : 'border-zinc-200 hover:border-zinc-400'
-                                            )}
-                                        >
-                                            <img src={view.url} alt={view.label} className="h-20 w-16 rounded-xl object-cover" />
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section className="rounded-[32px] border border-zinc-200 bg-white p-5 shadow-sm">
-                        <div className="flex h-full flex-col gap-6">
-                            <div>
-                                <h1 className="text-2xl font-semibold tracking-tight">Customize your sweatshirt</h1>
-                                <p className="mt-1 text-sm text-zinc-500">Create something timeless.</p>
-                            </div>
-
-                            <div className={cn('space-y-3 rounded-3xl border p-4', activeTool === 'upload' && 'border-zinc-950 bg-zinc-50')}>
-                                <div>
-                                    <Label className="text-sm font-semibold text-zinc-800">Product color</Label>
-                                    <p className="mt-1 text-xs text-zinc-500">Selected: {selectedColor?.label}</p>
-                                </div>
-                                <div className="flex flex-wrap gap-3">
-                                    {PRODUCT_COLORS.map((color) => (
-                                        <button
-                                            key={color.id}
-                                            type="button"
-                                            onClick={() => setProductColor(color.id)}
-                                            className={cn(
-                                                'flex size-10 items-center justify-center rounded-full border shadow-sm transition-transform hover:scale-105',
-                                                color.id === 'white' ? 'border-zinc-300' : 'border-transparent',
-                                                productColor === color.id && 'ring-2 ring-zinc-950 ring-offset-2'
-                                            )}
-                                            style={{ backgroundColor: color.value }}
-                                            aria-label={color.label}
-                                        >
-                                            {productColor === color.id && (
-                                                <Check className={cn('size-4', color.id === 'white' ? 'text-zinc-950' : 'text-white')} />
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className={cn('space-y-3 rounded-3xl border p-4', activeTool === 'images' && 'border-zinc-950 bg-zinc-50')}>
-                                <div>
-                                    <Label className="text-sm font-semibold text-zinc-800">Add your design</Label>
-                                </div>
-                                <Button type="button" className="w-full rounded-2xl bg-zinc-950 text-white hover:bg-zinc-800" onClick={() => fileInputRef.current?.click()}>
-                                    <Upload className="size-4" />
-                                    Upload image or logo
-                                </Button>
-                                <p className="text-xs text-zinc-500">JPG, PNG, SVG up to 10MB</p>
-
-                                {uploadedDesigns.length > 0 && (
-                                    <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-xs uppercase tracking-[0.2em] text-zinc-500">Images</Label>
-                                            <Button type="button" variant="ghost" size="sm" onClick={handleClearUploadedDesigns}>
-                                                Clear
-                                            </Button>
-                                        </div>
-                                        <div className="space-y-2">
-                                            {uploadedDesigns.map((design) => (
-                                                <div key={design.id} className={cn('flex items-center gap-3 rounded-2xl border p-2', selectedDesignId === design.id && 'border-zinc-950 bg-white')}>
-                                                    <img src={design.url} alt={design.name} className="h-14 w-14 rounded-xl object-cover" />
-                                                    <div className="min-w-0 flex-1">
-                                                        <p className="truncate text-sm font-medium">{design.name}</p>
-                                                    </div>
-                                                    <Button type="button" variant="outline" size="sm" onClick={() => handleUseUploadedDesign(design)}>
-                                                        Use
-                                                    </Button>
-                                                    <Button type="button" variant="ghost" size="icon-sm" onClick={() => handleRemoveUploadedDesign(design.id)}>
-                                                        <Trash2 className="size-4" />
-                                                    </Button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className={cn('space-y-3 rounded-3xl border p-4', activeTool === 'text' && 'border-zinc-950 bg-zinc-50')}>
-                                <div>
-                                    <Label className="text-sm font-semibold text-zinc-800">Add text</Label>
-                                </div>
-
-                                <div className="space-y-3 rounded-2xl bg-zinc-50 p-3">
-                                    <Input
-                                        value={draftText}
-                                        onChange={(event) => setDraftText(event.target.value)}
-                                        placeholder="Write something bold"
-                                        className="h-11 rounded-xl bg-white"
-                                    />
-                                    <div className="grid grid-cols-[minmax(0,1fr)_90px_52px] gap-2">
-                                        <Select value={draftFontFamily} onValueChange={setDraftFontFamily}>
-                                            <SelectTrigger className="h-11 w-full rounded-xl bg-white">
-                                                <SelectValue placeholder="Font" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                {FONT_OPTIONS.map((font) => (
-                                                    <SelectItem key={font} value={font}>{font}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <Input
-                                            type="number"
-                                            min={10}
-                                            max={120}
-                                            value={draftFontSize}
-                                            onChange={(event) => setDraftFontSize(Number(event.target.value || 24))}
-                                            className="h-11 rounded-xl bg-white text-center"
-                                        />
-                                        <Input
-                                            type="color"
-                                            value={draftTextColor}
-                                            onChange={(event) => setDraftTextColor(event.target.value)}
-                                            className="h-11 rounded-xl bg-white p-1"
-                                        />
-                                    </div>
-                                    <Button type="button" className="w-full rounded-xl" onClick={handleAddText} disabled={!draftText.trim()}>
-                                        <Type className="size-4" />
-                                        Add text layer
-                                    </Button>
-                                </div>
-
-                                {activeTextLayers.length > 0 && (
-                                    <div className="space-y-3">
-                                        {activeTextLayers.map((layer) => (
-                                            <div
-                                                key={layer.id}
-                                                className={cn(
-                                                    'space-y-3 rounded-2xl border bg-white p-3 transition-colors',
-                                                    selectedObjectId === layer.id && 'border-zinc-950 shadow-sm'
-                                                )}
-                                                onClick={() => selectObject(layer.id)}
-                                            >
-                                                <Input
-                                                    value={layer.text}
-                                                    onFocus={() => selectObject(layer.id)}
-                                                    onChange={(event) => updateTextLayer(layer.id, { text: event.target.value }, false)}
-                                                    onBlur={(event) => updateTextLayer(layer.id, { text: event.target.value })}
-                                                    className="h-10 rounded-xl"
-                                                />
-                                                <div className="grid grid-cols-[minmax(0,1fr)_80px_52px] gap-2">
-                                                    <Select value={layer.fontFamily} onValueChange={(value) => updateTextLayer(layer.id, { fontFamily: value })}>
-                                                        <SelectTrigger className="h-10 w-full rounded-xl">
-                                                            <SelectValue placeholder="Font" />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {FONT_OPTIONS.map((font) => (
-                                                                <SelectItem key={font} value={font}>{font}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                    <Input
-                                                        type="number"
-                                                        min={10}
-                                                        max={120}
-                                                        value={layer.fontSize}
-                                                        onFocus={() => selectObject(layer.id)}
-                                                        onChange={(event) => updateTextLayer(layer.id, { fontSize: Number(event.target.value || 24) })}
-                                                        className="h-10 rounded-xl text-center"
-                                                    />
-                                                    <Input
-                                                        type="color"
-                                                        value={layer.fill}
-                                                        onFocus={() => selectObject(layer.id)}
-                                                        onChange={(event) => updateTextLayer(layer.id, { fill: event.target.value })}
-                                                        className="h-10 rounded-xl p-1"
-                                                    />
-                                                </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    <Button
-                                                        type="button"
-                                                        variant={layer.fontWeight === '700' ? 'default' : 'outline'}
-                                                        size="icon-sm"
-                                                        onClick={() => updateTextLayer(layer.id, { fontWeight: layer.fontWeight === '700' ? '400' : '700' })}
-                                                    >
-                                                        <Bold className="size-4" />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant={layer.fontStyle === 'italic' ? 'default' : 'outline'}
-                                                        size="icon-sm"
-                                                        onClick={() => updateTextLayer(layer.id, { fontStyle: layer.fontStyle === 'italic' ? 'normal' : 'italic' })}
-                                                    >
-                                                        <Italic className="size-4" />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant={layer.underline ? 'default' : 'outline'}
-                                                        size="icon-sm"
-                                                        onClick={() => updateTextLayer(layer.id, { underline: !layer.underline })}
-                                                    >
-                                                        <Underline className="size-4" />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant={layer.textAlign === 'left' ? 'default' : 'outline'}
-                                                        size="icon-sm"
-                                                        onClick={() => updateTextLayer(layer.id, { textAlign: 'left' })}
-                                                    >
-                                                        <AlignLeft className="size-4" />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant={layer.textAlign === 'center' ? 'default' : 'outline'}
-                                                        size="icon-sm"
-                                                        onClick={() => updateTextLayer(layer.id, { textAlign: 'center' })}
-                                                    >
-                                                        <AlignCenter className="size-4" />
-                                                    </Button>
-                                                    <Button
-                                                        type="button"
-                                                        variant={layer.textAlign === 'right' ? 'default' : 'outline'}
-                                                        size="icon-sm"
-                                                        onClick={() => updateTextLayer(layer.id, { textAlign: 'right' })}
-                                                    >
-                                                        <AlignRight className="size-4" />
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-
-                            <div className={cn('space-y-3 rounded-3xl border p-4', activeTool === 'shapes' && 'border-zinc-950 bg-zinc-50')}>
-                                <div>
-                                    <Label className="text-sm font-semibold text-zinc-800">Shapes</Label>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button type="button" variant="outline" className="rounded-2xl" onClick={() => addShape('rect')}>
-                                        <Square className="size-4" />
-                                        Rectangle
-                                    </Button>
-                                    <Button type="button" variant="outline" className="rounded-2xl" onClick={() => addShape('circle')}>
-                                        <CircleIcon className="size-4" />
-                                        Circle
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3 rounded-3xl border p-4">
-                                <div>
-                                    <Label className="text-sm font-semibold text-zinc-800">Arrange</Label>
-                                    <p className="mt-1 text-xs text-zinc-500">Drag and drop on the canvas, then refine the stack here.</p>
-                                </div>
-                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                    <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={handleBringForward}>
-                                        <BringToFront className="size-4" />
-                                        Bring forward
-                                    </Button>
-                                    <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={handleSendBackward}>
-                                        <SendToBack className="size-4" />
-                                        Send backward
-                                    </Button>
-                                    <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={handleDeleteSelected}>
-                                        <Trash2 className="size-4" />
-                                        Delete
-                                    </Button>
-                                </div>
-                            </div>
-
-                            <div className="mt-auto space-y-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-4">
-                                <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-                                    <Button type="button" variant="outline" className="h-12 rounded-2xl" onClick={handleDownloadBoth}>
-                                        <Download className="size-4" />
-                                        Download design
-                                    </Button>
-                                    <Button type="button" className="h-12 rounded-2xl bg-zinc-950 text-white hover:bg-zinc-800" onClick={handleSaveOrderDesign} disabled={isSaving}>
-                                        <ShoppingCart className="size-4" />
-                                        <span className="truncate">Add to cart</span>
-                                        <span>{PRODUCT_PRICE}</span>
-                                    </Button>
-                                </div>
-                                <p className="text-center text-xs text-zinc-500">Secure checkout. Free returns.</p>
-                                {savedUrl && (
-                                    <a href={savedUrl} target="_blank" rel="noreferrer" className="block text-center text-sm font-medium text-zinc-700 underline-offset-4 hover:underline">
-                                        View last saved design image
-                                    </a>
-                                )}
-                            </div>
-                        </div>
-                    </section>
-
-                    <aside className={cn('rounded-[32px] border border-zinc-200 bg-white p-4 shadow-sm', activeTool === 'layers' && 'border-zinc-950')}>
-                        <div className="flex h-full flex-col">
-                            <div className="mb-4 flex items-center justify-between gap-3">
-                                <div>
-                                    <h2 className="text-base font-semibold">Layers</h2>
-                                    <p className="text-xs text-zinc-500">{activeView === 'front' ? 'Front view' : 'Back view'} stack</p>
-                                </div>
-                                <Layers3 className="size-4 text-zinc-400" />
-                            </div>
-
-                            <div className="space-y-2">
-                                {layers.length === 0 ? (
-                                    <div className="rounded-2xl border border-dashed border-zinc-300 px-4 py-6 text-center text-sm text-zinc-500">
-                                        Add text, images, or shapes to build your design.
-                                    </div>
-                                ) : (
-                                    layers.map((layer) => (
-                                        <button
-                                            key={layer.id}
-                                            type="button"
-                                            onClick={() => selectObject(layer.id)}
-                                            className={cn(
-                                                'flex w-full items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-colors',
-                                                layer.selected ? 'border-zinc-950 bg-zinc-50' : 'border-zinc-200 hover:border-zinc-400'
-                                            )}
-                                        >
-                                            <div className="flex size-9 items-center justify-center rounded-xl bg-zinc-100 text-zinc-700">
-                                                {layer.type === 'text' ? <Type className="size-4" /> : layer.type === 'image' ? <ImagePlus className="size-4" /> : <Shapes className="size-4" />}
-                                            </div>
-                                            <div className="min-w-0 flex-1">
-                                                <p className="truncate text-sm font-medium">{layer.label}</p>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                className="text-zinc-500 transition-colors hover:text-zinc-950"
-                                                onClick={(event) => {
-                                                    event.stopPropagation();
-                                                    toggleLayerVisibility(layer.id);
-                                                }}
-                                                aria-label={layer.visible ? 'Hide layer' : 'Show layer'}
-                                            >
-                                                {layer.visible ? <Eye className="size-4" /> : <EyeOff className="size-4" />}
-                                            </button>
-                                        </button>
-                                    ))
-                                )}
-                            </div>
-                        </div>
-                    </aside>
+                    <CustomizePanel
+                        activeTool={activeTool}
+                        selectedColor={selectedColor}
+                        productColors={PRODUCT_COLORS}
+                        productColor={productColor}
+                        onSelectProductColor={setProductColor}
+                        onOpenUpload={() => fileInputRef.current?.click()}
+                        uploadedDesigns={uploadedDesigns}
+                        selectedDesignId={selectedDesignId}
+                        onClearUploadedDesigns={handleClearUploadedDesigns}
+                        usedDesignIds={usedDesignIds}
+                        onUseUploadedDesign={handleUseUploadedDesign}
+                        onRemoveUploadedDesign={handleRemoveUploadedDesign}
+                        draftText={draftText}
+                        onDraftTextChange={setDraftText}
+                        draftFontFamily={draftFontFamily}
+                        onDraftFontFamilyChange={setDraftFontFamily}
+                        draftFontSize={draftFontSize}
+                        onDraftFontSizeChange={setDraftFontSize}
+                        draftTextColor={draftTextColor}
+                        onDraftTextColorChange={setDraftTextColor}
+                        onAddText={handleAddText}
+                        fontOptions={FONT_OPTIONS}
+                        activeTextLayers={activeTextLayers}
+                        selectedObjectId={selectedObjectId}
+                        onSelectObject={selectObject}
+                        onUpdateTextLayer={updateTextLayer}
+                        onAddShape={addShape}
+                        onBringForward={handleBringForward}
+                        onSendBackward={handleSendBackward}
+                        onDeleteSelected={handleDeleteSelected}
+                        orderQuantity={orderQuantity}
+                        onDecreaseQuantity={() => setOrderQuantity((prev) => Math.max(1, prev - 1))}
+                        onIncreaseQuantity={() => setOrderQuantity((prev) => Math.min(99, prev + 1))}
+                        onDownload={handleDownloadBoth}
+                        onOrderNow={handleOrderNow}
+                        isSaving={isSaving}
+                        savedUrl={savedUrl}
+                    />
                 </div>
             </div>
         </div>

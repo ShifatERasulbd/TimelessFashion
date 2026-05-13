@@ -39,6 +39,10 @@ const AddHero   = lazyWithRetry(() => import('@/pages/Hero/addHero'), 'add-hero'
 const EditHero  = lazyWithRetry(() => import('@/pages/Hero/editHero'), 'edit-hero');
 
 const PersonalizerFeatures = lazyWithRetry(() => import('../personalizer/features'), 'personalizer-features');
+const PersonalizerConfirmOrder = lazyWithRetry(() => import('../personalizer/confirm-order'), 'personalizer-confirm-order');
+const PersonalizationOrders = lazyWithRetry(() => import('@/pages/Personalization/orders'), 'personalization-orders');
+const ViewPersonalizationOrder = lazyWithRetry(() => import('@/pages/Personalization/viewOrder'), 'personalization-order-view');
+const EditPersonalizationOrder = lazyWithRetry(() => import('@/pages/Personalization/editOrder'), 'personalization-order-edit');
 
 
 
@@ -68,9 +72,15 @@ export default function App() {
                             <Route path="hero/add" element={<AddHero />} />
                             <Route path="hero/:id/edit" element={<EditHero />} />
 
+                            {/* Personalization Orders */}
+                            <Route path="personalization/orders" element={<PersonalizationOrders />} />
+                            <Route path="personalization/orders/:id" element={<ViewPersonalizationOrder />} />
+                            <Route path="personalization/orders/:id/edit" element={<EditPersonalizationOrder />} />
+
                         </Route>
 
                         <Route path="/personalizer/features" element={<PersonalizerFeatures />} />
+                        <Route path="/personalizer/confirm-order" element={<PersonalizerConfirmOrder />} />
                         <Route path="/admin/features" element={<Navigate to="/personalizer/features" replace />} />
 
                         <Route path="/" element={<main />} />

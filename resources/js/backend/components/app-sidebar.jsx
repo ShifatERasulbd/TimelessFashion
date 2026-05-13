@@ -1,5 +1,6 @@
 import {
     Gauge,
+    Palette,
     Sparkles,
     LogOut
   
@@ -27,11 +28,16 @@ const homeItems = [
 
 const websiteItems = [
     { title: 'Hero', icon: Sparkles, path: '/admin/hero' },
+    { title: 'Personalization Orders', icon: Palette, path: '/admin/personalization/orders' },
 ]
 
 
 
 export function AppSidebar(props) {
+        const isMenuItemActive = (path) => {
+            return location.pathname === path || location.pathname.startsWith(`${path}/`);
+        };
+
     const navigate = useNavigate();
     const location = useLocation();
     const [isLoggingOut, setIsLoggingOut] = useState(false);
@@ -89,7 +95,7 @@ export function AppSidebar(props) {
                                         <SidebarMenuButton
                                             asChild
                                             tooltip={item.title}
-                                            isActive={location.pathname === item.path}
+                                            isActive={isMenuItemActive(item.path)}
                                         >
                                             <Link to={item.path}>
                                                 <item.icon className="size-4 shrink-0 text-sidebar-foreground" />
@@ -114,7 +120,7 @@ export function AppSidebar(props) {
                                         <SidebarMenuButton
                                             asChild
                                             tooltip={item.title}
-                                            isActive={location.pathname === item.path}
+                                            isActive={isMenuItemActive(item.path)}
                                         >
                                             <Link to={item.path}>
                                                 <item.icon className="size-4 shrink-0 text-sidebar-foreground" />
