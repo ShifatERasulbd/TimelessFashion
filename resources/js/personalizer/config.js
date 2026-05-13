@@ -35,9 +35,9 @@ export const DESIGN_AREAS = {
         height: 0.438,
     },
     back: {
-        left: 0.28,
+         left: 0.32,
         top: 0.341,
-        width: 0.24,
+        width: 0.39,
         height: 0.438,
     },
 };

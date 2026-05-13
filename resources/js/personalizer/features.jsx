@@ -94,6 +94,11 @@ export default function Features() {
         [layers]
     );
 
+    const activeImageLayers = useMemo(
+        () => layers.filter((layer) => layer.type === 'image'),
+        [layers]
+    );
+
     const selectedTextLayer = useMemo(
         () => activeTextLayers.find((layer) => layer.id === selectedObjectId) || null,
         [activeTextLayers, selectedObjectId]
@@ -310,25 +315,47 @@ export default function Features() {
         if (!canvas) return;
 
         const activeObjectId = canvas.getActiveObject()?.get?.('objectId') || null;
+        const designArea = getDesignArea(viewId);
 
         const nextLayers = getViewObjects(viewId)
             .slice()
             .reverse()
-            .map((object) => ({
-                id: object.get?.('objectId'),
-                type: getLayerType(object),
-                label: getLayerLabel(object),
-                visible: object.visible !== false,
-                selected: object.get?.('objectId') === activeObjectId,
-                text: object.text || '',
-                fontFamily: object.fontFamily || 'Montserrat',
-                fontSize: Number(object.fontSize || 24),
-                fill: object.fill || '#111111',
-                fontWeight: object.fontWeight || '400',
-                fontStyle: object.fontStyle || 'normal',
-                underline: Boolean(object.underline),
-                textAlign: object.textAlign || 'center',
-            }));
+            .map((object) => {
+                const currentLeft = Number(object.left || 0);
+                const currentTop = Number(object.top || 0);
+                const scaleX = Number(object.scaleX || 1);
+                const scaleY = Number(object.scaleY || 1);
+                const baseWidth = Number(object.width || 0);
+                const baseHeight = Number(object.height || 0);
+
+                return {
+                    id: object.get?.('objectId'),
+                    type: getLayerType(object),
+                    label: getLayerLabel(object),
+                    visible: object.visible !== false,
+                    selected: object.get?.('objectId') === activeObjectId,
+                    text: object.text || '',
+                    fontFamily: object.fontFamily || 'Montserrat',
+                    fontSize: Number(object.fontSize || 24),
+                    fill: object.fill || '#111111',
+                    fontWeight: object.fontWeight || '400',
+                    fontStyle: object.fontStyle || 'normal',
+                    underline: Boolean(object.underline),
+                    textAlign: object.textAlign || 'center',
+                    left: Number(currentLeft.toFixed(2)),
+                    top: Number(currentTop.toFixed(2)),
+                    leftPercent: designArea?.width
+                        ? Number((((currentLeft - designArea.left) / designArea.width) * 100).toFixed(2))
+                        : 0,
+                    topPercent: designArea?.height
+                        ? Number((((currentTop - designArea.top) / designArea.height) * 100).toFixed(2))
+                        : 0,
+                    angle: Number(Number(object.angle || 0).toFixed(2)),
+                    scalePercent: Number((((scaleX + scaleY) / 2) * 100).toFixed(2)),
+                    width: Number((baseWidth * scaleX).toFixed(2)),
+                    height: Number((baseHeight * scaleY).toFixed(2)),
+                };
+            });
 
         setLayers(nextLayers);
         setSelectedObjectId(activeObjectId);
@@ -870,6 +897,60 @@ export default function Features() {
         }
     };
 
+    const updateImageLayer = (layerId, updates, shouldRecord = true) => {
+        const canvas = getCanvas();
+        const object = getObjectById(layerId);
+        if (!canvas || !object || object.get?.('layerType') !== 'image') return;
+
+        const baseWidth = Number(object.width || 1);
+        const baseHeight = Number(object.height || 1);
+        const viewId = object.get?.('viewId') || activeViewRef.current;
+        const designArea = getDesignArea(viewId);
+
+        if (typeof updates.left === 'number' && Number.isFinite(updates.left)) {
+            object.set('left', updates.left);
+        }
+
+        if (typeof updates.top === 'number' && Number.isFinite(updates.top)) {
+            object.set('top', updates.top);
+        }
+
+        if (typeof updates.leftPercent === 'number' && Number.isFinite(updates.leftPercent) && designArea?.width) {
+            object.set('left', designArea.left + (updates.leftPercent / 100) * designArea.width);
+        }
+
+        if (typeof updates.topPercent === 'number' && Number.isFinite(updates.topPercent) && designArea?.height) {
+            object.set('top', designArea.top + (updates.topPercent / 100) * designArea.height);
+        }
+
+        if (typeof updates.width === 'number' && Number.isFinite(updates.width) && updates.width > 0) {
+            object.set('scaleX', Math.max(0.05, updates.width / baseWidth));
+        }
+
+        if (typeof updates.height === 'number' && Number.isFinite(updates.height) && updates.height > 0) {
+            object.set('scaleY', Math.max(0.05, updates.height / baseHeight));
+        }
+
+        if (typeof updates.scalePercent === 'number' && Number.isFinite(updates.scalePercent)) {
+            const uniformScale = Math.max(0.05, updates.scalePercent / 100);
+            object.set({ scaleX: uniformScale, scaleY: uniformScale });
+        }
+
+        if (typeof updates.angle === 'number' && Number.isFinite(updates.angle)) {
+            object.set('angle', updates.angle);
+        }
+
+        clampObjectToArea(object, { shouldFit: true });
+        updateImageVisibilityByArea(object, viewId);
+
+        canvas.renderAll();
+        refreshLayers();
+
+        if (shouldRecord) {
+            recordHistory();
+        }
+    };
+
     const handleDraftFontFamilyChange = (fontFamily) => {
         setDraftFontFamily(fontFamily);
 
@@ -1236,9 +1317,11 @@ export default function Features() {
                         onDraftTextColorChange={handleDraftTextColorChange}
                         onAddText={handleAddText}
                         fontOptions={FONT_OPTIONS}
+                        activeImageLayers={activeImageLayers}
                         activeTextLayers={activeTextLayers}
                         selectedObjectId={selectedObjectId}
                         onSelectObject={selectObject}
+                        onUpdateImageLayer={updateImageLayer}
                         onUpdateTextLayer={updateTextLayer}
                         onAddShape={addShape}
                         onBringForward={handleBringForward}

@@ -1,9 +1,13 @@
+import { useState } from 'react';
+
 import {
     AlignCenter,
     AlignLeft,
     AlignRight,
     Bold,
     BringToFront,
+    ChevronDown,
+    ChevronRight,
     Check,
     Circle as CircleIcon,
     Download,
@@ -29,6 +33,23 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 
+const PIXELS_PER_INCH = 96;
+const CM_PER_INCH = 2.54;
+
+function toUnitFromPx(valuePx, unit) {
+    const numeric = Number(valuePx || 0);
+    if (unit === 'in') return numeric / PIXELS_PER_INCH;
+    if (unit === 'cm') return (numeric / PIXELS_PER_INCH) * CM_PER_INCH;
+    return numeric;
+}
+
+function fromUnitToPx(value, unit) {
+    const numeric = Number(value || 0);
+    if (unit === 'in') return numeric * PIXELS_PER_INCH;
+    if (unit === 'cm') return (numeric / CM_PER_INCH) * PIXELS_PER_INCH;
+    return numeric;
+}
+
 export default function CustomizePanel({
     activeTool,
     selectedColor,
@@ -52,9 +73,11 @@ export default function CustomizePanel({
     onDraftTextColorChange,
     onAddText,
     fontOptions,
+    activeImageLayers,
     activeTextLayers,
     selectedObjectId,
     onSelectObject,
+    onUpdateImageLayer,
     onUpdateTextLayer,
     onAddShape,
     onBringForward,
@@ -68,6 +91,26 @@ export default function CustomizePanel({
     isSaving,
     savedUrl,
 }) {
+    const [imageSizeUnit, setImageSizeUnit] = useState('px');
+    const [collapsedSections, setCollapsedSections] = useState({
+        productColor: false,
+        images: false,
+        text: false,
+        shapes: false,
+        arrange: false,
+        checkout: false,
+    });
+
+    const imageSizeUnitLabel = imageSizeUnit === 'in' ? 'in' : imageSizeUnit === 'cm' ? 'cm' : 'px';
+    const isCollapsed = (section) => collapsedSections[section] === true;
+
+    const toggleSection = (section) => {
+        setCollapsedSections((previous) => ({
+            ...previous,
+            [section]: !previous[section],
+        }));
+    };
+
     return (
         <section className="rounded-[32px] border border-zinc-200 bg-white p-5 shadow-sm">
             <div className="flex h-full flex-col gap-6">
@@ -77,43 +120,57 @@ export default function CustomizePanel({
                 </div>
 
                 <div className={cn('space-y-3 rounded-3xl border p-4', activeTool === 'upload' && 'border-zinc-950 bg-zinc-50')}>
-                    <div>
-                        <Label className="text-sm font-semibold text-zinc-800">Product color</Label>
-                        <p className="mt-1 text-xs text-zinc-500">Selected: {selectedColor?.label}</p>
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <Label className="text-sm font-semibold text-zinc-800">Product color</Label>
+                            <p className="mt-1 text-xs text-zinc-500">Selected: {selectedColor?.label}</p>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => toggleSection('productColor')}>
+                            {isCollapsed('productColor') ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
+                        </Button>
                     </div>
-                    <div className="flex flex-wrap gap-3">
-                        {productColors.map((color) => (
-                            <button
-                                key={color.id}
-                                type="button"
-                                onClick={() => onSelectProductColor(color.id)}
-                                className={cn(
-                                    'flex size-10 items-center justify-center rounded-full border shadow-sm transition-transform hover:scale-105',
-                                    color.id === 'white' ? 'border-zinc-300' : 'border-transparent',
-                                    productColor === color.id && 'ring-2 ring-zinc-950 ring-offset-2'
-                                )}
-                                style={{ backgroundColor: color.value }}
-                                aria-label={color.label}
-                            >
-                                {productColor === color.id && (
-                                    <Check className={cn('size-4', color.id === 'white' ? 'text-zinc-950' : 'text-white')} />
-                                )}
-                            </button>
-                        ))}
-                    </div>
+                    {!isCollapsed('productColor') && (
+                        <div className="flex flex-wrap gap-3">
+                            {productColors.map((color) => (
+                                <button
+                                    key={color.id}
+                                    type="button"
+                                    onClick={() => onSelectProductColor(color.id)}
+                                    className={cn(
+                                        'flex size-10 items-center justify-center rounded-full border shadow-sm transition-transform hover:scale-105',
+                                        color.id === 'white' ? 'border-zinc-300' : 'border-transparent',
+                                        productColor === color.id && 'ring-2 ring-zinc-950 ring-offset-2'
+                                    )}
+                                    style={{ backgroundColor: color.value }}
+                                    aria-label={color.label}
+                                >
+                                    {productColor === color.id && (
+                                        <Check className={cn('size-4', color.id === 'white' ? 'text-zinc-950' : 'text-white')} />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className={cn('space-y-3 rounded-3xl border p-4', activeTool === 'images' && 'border-zinc-950 bg-zinc-50')}>
-                    <div>
-                        <Label className="text-sm font-semibold text-zinc-800">Add your design</Label>
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <Label className="text-sm font-semibold text-zinc-800">Add your design</Label>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => toggleSection('images')}>
+                            {isCollapsed('images') ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
+                        </Button>
                     </div>
-                    <Button type="button" className="w-full rounded-2xl bg-zinc-950 text-white hover:bg-zinc-800" onClick={onOpenUpload}>
-                        <Upload className="size-4" />
-                        Upload image or logo
-                    </Button>
-                    <p className="text-xs text-zinc-500">JPG, PNG, SVG up to 10MB</p>
+                    {!isCollapsed('images') && (
+                        <>
+                            <Button type="button" className="w-full rounded-2xl bg-zinc-950 text-white hover:bg-zinc-800" onClick={onOpenUpload}>
+                                <Upload className="size-4" />
+                                Upload image or logo
+                            </Button>
+                            <p className="text-xs text-zinc-500">JPG, PNG, SVG up to 10MB</p>
 
-                    {uploadedDesigns.length > 0 && (
+                            {uploadedDesigns.length > 0 && (
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
                                 <Label className="text-xs uppercase tracking-[0.2em] text-zinc-500">Images</Label>
@@ -144,14 +201,139 @@ export default function CustomizePanel({
                                 ))}
                             </div>
                         </div>
+                            )}
+
+                            {activeImageLayers.length > 0 && (
+                        <div className="space-y-3 border-t border-zinc-200 pt-3">
+                            <div className="flex items-center justify-between gap-2">
+                                <Label className="text-xs uppercase tracking-[0.2em] text-zinc-500">Image layer settings</Label>
+                                <div className="inline-flex items-center rounded-xl border border-zinc-200 bg-white p-1">
+                                    {['px', 'in', 'cm'].map((unit) => (
+                                        <button
+                                            key={unit}
+                                            type="button"
+                                            onClick={() => setImageSizeUnit(unit)}
+                                            className={cn(
+                                                'rounded-lg px-2.5 py-1 text-xs font-medium uppercase transition-colors',
+                                                imageSizeUnit === unit
+                                                    ? 'bg-zinc-950 text-white'
+                                                    : 'text-zinc-600 hover:bg-zinc-100'
+                                            )}
+                                        >
+                                            {unit}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {activeImageLayers.map((layer) => (
+                                <div
+                                    key={layer.id}
+                                    className={cn(
+                                        'space-y-3 rounded-2xl border bg-white p-3 transition-colors',
+                                        selectedObjectId === layer.id && 'border-zinc-950 shadow-sm'
+                                    )}
+                                    onClick={() => onSelectObject(layer.id)}
+                                >
+                                    <div className="flex items-center justify-between gap-2">
+                                        <p className="truncate text-sm font-semibold text-zinc-800">{layer.label}</p>
+                                        <Button type="button" variant="outline" size="sm" onClick={() => onSelectObject(layer.id)}>
+                                            Select
+                                        </Button>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-500">Width ({imageSizeUnitLabel})</Label>
+                                            <Input
+                                                type="number"
+                                                min={20}
+                                                value={Number(toUnitFromPx(layer.width, imageSizeUnit).toFixed(2))}
+                                                onFocus={() => onSelectObject(layer.id)}
+                                                onChange={(event) => onUpdateImageLayer(layer.id, { width: fromUnitToPx(Number(event.target.value || 0), imageSizeUnit) })}
+                                                className="h-10 rounded-xl"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-500">Height ({imageSizeUnitLabel})</Label>
+                                            <Input
+                                                type="number"
+                                                min={20}
+                                                value={Number(toUnitFromPx(layer.height, imageSizeUnit).toFixed(2))}
+                                                onFocus={() => onSelectObject(layer.id)}
+                                                onChange={(event) => onUpdateImageLayer(layer.id, { height: fromUnitToPx(Number(event.target.value || 0), imageSizeUnit) })}
+                                                className="h-10 rounded-xl"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-500">Rotate (deg)</Label>
+                                            <Input
+                                                type="number"
+                                                value={layer.angle}
+                                                onFocus={() => onSelectObject(layer.id)}
+                                                onChange={(event) => onUpdateImageLayer(layer.id, { angle: Number(event.target.value || 0) })}
+                                                className="h-10 rounded-xl"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-500">Scale (%)</Label>
+                                            <Input
+                                                type="number"
+                                                min={5}
+                                                max={500}
+                                                value={layer.scalePercent}
+                                                onFocus={() => onSelectObject(layer.id)}
+                                                onChange={(event) => onUpdateImageLayer(layer.id, { scalePercent: Number(event.target.value || 100) })}
+                                                className="h-10 rounded-xl"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-500">Position left (%)</Label>
+                                            <Input
+                                                type="number"
+                                                value={layer.leftPercent}
+                                                onFocus={() => onSelectObject(layer.id)}
+                                                onChange={(event) => onUpdateImageLayer(layer.id, { leftPercent: Number(event.target.value || 0) })}
+                                                className="h-10 rounded-xl"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <Label className="text-xs text-zinc-500">Position top (%)</Label>
+                                            <Input
+                                                type="number"
+                                                value={layer.topPercent}
+                                                onFocus={() => onSelectObject(layer.id)}
+                                                onChange={(event) => onUpdateImageLayer(layer.id, { topPercent: Number(event.target.value || 0) })}
+                                                className="h-10 rounded-xl"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                            )}
+                        </>
                     )}
                 </div>
 
                 <div className={cn('space-y-3 rounded-3xl border p-4', activeTool === 'text' && 'border-zinc-950 bg-zinc-50')}>
-                    <div>
-                        <Label className="text-sm font-semibold text-zinc-800">Add text</Label>
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <Label className="text-sm font-semibold text-zinc-800">Add text</Label>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => toggleSection('text')}>
+                            {isCollapsed('text') ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
+                        </Button>
                     </div>
 
+                    {!isCollapsed('text') && (
+                        <>
                     <div className="space-y-3 rounded-2xl bg-zinc-50 p-3">
                         <Input
                             value={draftText}
@@ -291,46 +473,72 @@ export default function CustomizePanel({
                             ))}
                         </div>
                     )}
+                        </>
+                    )}
                 </div>
 
                 <div className={cn('space-y-3 rounded-3xl border p-4', activeTool === 'shapes' && 'border-zinc-950 bg-zinc-50')}>
-                    <div>
-                        <Label className="text-sm font-semibold text-zinc-800">Shapes</Label>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3">
-                        <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('rect')}>
-                            <Square className="size-4" />
-                            Rectangle
-                        </Button>
-                        <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('circle')}>
-                            <CircleIcon className="size-4" />
-                            Circle
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <Label className="text-sm font-semibold text-zinc-800">Shapes</Label>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => toggleSection('shapes')}>
+                            {isCollapsed('shapes') ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
                         </Button>
                     </div>
+                    {!isCollapsed('shapes') && (
+                        <div className="grid grid-cols-2 gap-3">
+                            <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('rect')}>
+                                <Square className="size-4" />
+                                Rectangle
+                            </Button>
+                            <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('circle')}>
+                                <CircleIcon className="size-4" />
+                                Circle
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="space-y-3 rounded-3xl border p-4">
-                    <div>
-                        <Label className="text-sm font-semibold text-zinc-800">Arrange</Label>
-                        <p className="mt-1 text-xs text-zinc-500">Drag and drop on the canvas, then refine the stack here.</p>
-                    </div>
-                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                        <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={onBringForward}>
-                            <BringToFront className="size-4" />
-                            Bring forward
-                        </Button>
-                        <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={onSendBackward}>
-                            <SendToBack className="size-4" />
-                            Send backward
-                        </Button>
-                        <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={onDeleteSelected}>
-                            <Trash2 className="size-4" />
-                            Delete
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <Label className="text-sm font-semibold text-zinc-800">Arrange</Label>
+                            <p className="mt-1 text-xs text-zinc-500">Drag and drop on the canvas, then refine the stack here.</p>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => toggleSection('arrange')}>
+                            {isCollapsed('arrange') ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
                         </Button>
                     </div>
+                    {!isCollapsed('arrange') && (
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                            <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={onBringForward}>
+                                <BringToFront className="size-4" />
+                                Bring forward
+                            </Button>
+                            <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={onSendBackward}>
+                                <SendToBack className="size-4" />
+                                Send backward
+                            </Button>
+                            <Button type="button" variant="outline" className="h-auto whitespace-normal rounded-2xl justify-start py-2 text-left leading-tight" onClick={onDeleteSelected}>
+                                <Trash2 className="size-4" />
+                                Delete
+                            </Button>
+                        </div>
+                    )}
                 </div>
 
                 <div className="mt-auto space-y-3 rounded-3xl border border-zinc-200 bg-zinc-50 p-4">
+                    <div className="flex items-start justify-between gap-2">
+                        <div>
+                            <Label className="text-sm font-semibold text-zinc-800">Checkout</Label>
+                        </div>
+                        <Button type="button" variant="ghost" size="icon-sm" onClick={() => toggleSection('checkout')}>
+                            {isCollapsed('checkout') ? <ChevronRight className="size-4" /> : <ChevronDown className="size-4" />}
+                        </Button>
+                    </div>
+                    {!isCollapsed('checkout') && (
+                        <>
                     <div className="space-y-2 rounded-2xl border border-zinc-200 bg-white p-3">
                         <Label htmlFor="order-quantity" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Quantity</Label>
                         <div className="inline-flex h-11 items-center overflow-hidden rounded-xl border border-zinc-300 bg-white">
@@ -377,6 +585,8 @@ export default function CustomizePanel({
                         <a href={savedUrl} target="_blank" rel="noreferrer" className="block text-center text-sm font-medium text-zinc-700 underline-offset-4 hover:underline">
                             View last saved design image
                         </a>
+                    )}
+                        </>
                     )}
                 </div>
             </div>
