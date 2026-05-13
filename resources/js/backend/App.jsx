@@ -3,7 +3,7 @@ import { LoginForm } from '@/components/login-form';
 import { Toaster } from '@/components/ui/sonner';
 import { AppProvider } from '@/context/AppContext';
 import AppLayout from '@/layouts/AppLayout';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 
 function lazyWithRetry(importer, key) {
     return lazy(async () => {
@@ -38,6 +38,9 @@ const Heroes    = lazyWithRetry(() => import('@/pages/Hero/hero'), 'hero');
 const AddHero   = lazyWithRetry(() => import('@/pages/Hero/addHero'), 'add-hero');
 const EditHero  = lazyWithRetry(() => import('@/pages/Hero/editHero'), 'edit-hero');
 
+const PersonalizerFeatures = lazyWithRetry(() => import('../personalizer/features'), 'personalizer-features');
+
+
 
 export default function App() {
     return (
@@ -64,7 +67,11 @@ export default function App() {
                             <Route path="hero" element={<Heroes />} />
                             <Route path="hero/add" element={<AddHero />} />
                             <Route path="hero/:id/edit" element={<EditHero />} />
+
                         </Route>
+
+                        <Route path="/personalizer/features" element={<PersonalizerFeatures />} />
+                        <Route path="/admin/features" element={<Navigate to="/personalizer/features" replace />} />
 
                         <Route path="/" element={<main />} />
 

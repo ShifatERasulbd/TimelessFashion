@@ -1,7 +1,7 @@
 import {
     Gauge,
     Sparkles,
-    LogOut,
+    LogOut
   
 } from 'lucide-react';
 import { useState } from 'react';
@@ -26,7 +26,7 @@ const homeItems = [
 ];
 
 const websiteItems = [
-    { title: 'Hero', icon: Sparkles, path: '/admin/hero' },  
+    { title: 'Hero', icon: Sparkles, path: '/admin/hero' },
 ]
 
 
