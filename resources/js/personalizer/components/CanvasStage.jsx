@@ -2,17 +2,31 @@ import { cn } from '@/lib/utils';
 
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config';
 
-export default function CanvasStage({ canvasRef, productViews, activeView, onSwitchView }) {
+export default function CanvasStage({ canvasRef, productViews, activeView, onSwitchView, designArea }) {
     return (
         <section className="overflow-hidden rounded-[32px] border border-zinc-200 bg-white shadow-sm">
             <div className="flex  flex-col">
                 <div className="flex-1 bg-[radial-gradient(circle_at_top,#ffffff,transparent_45%),linear-gradient(180deg,#f7f6f2_0%,#f2f0ea_100%)] p-4 sm:p-6">
                     <div className="mx-auto flex max-w-[860px] items-center justify-center rounded-[30px] border border-zinc-200/60 bg-white shadow-inner">
-                        <canvas
-                            ref={canvasRef}
-                            className="block max-w-full rounded-[28px]"
-                            style={{ width: '100%', height: 'auto', aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
-                        />
+                        <div className="relative w-full">
+                            <canvas
+                                ref={canvasRef}
+                                className="block max-w-full rounded-[28px]"
+                                style={{ width: '100%', height: 'auto', aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
+                            />
+
+                            {designArea && (
+                                <div
+                                    className="pointer-events-none absolute z-20 border-2 border-dotted border-red-500 shadow-[0_0_0_1px_rgba(255,255,255,0.55)]"
+                                    style={{
+                                        left: `${designArea.left * 100}%`,
+                                        top: `${designArea.top * 100}%`,
+                                        width: `${designArea.width * 100}%`,
+                                        height: `${designArea.height * 100}%`,
+                                    }}
+                                />
+                            )}
+                        </div>
                     </div>
                 </div> 
 

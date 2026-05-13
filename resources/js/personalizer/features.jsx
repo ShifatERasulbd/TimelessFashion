@@ -10,6 +10,7 @@ import PageHeader from './components/PageHeader';
 import {
     CANVAS_HEIGHT,
     CANVAS_WIDTH,
+    DESIGN_AREAS,
     FONT_OPTIONS,
     HISTORY_LIMIT,
     PRODUCT_COLORS,
@@ -99,6 +100,98 @@ export default function Features() {
     };
 
     const getCanvas = () => fabricRef.current;
+
+    const getDesignArea = (viewId = activeViewRef.current) => {
+        const area = DESIGN_AREAS[viewId];
+        if (!area) return null;
+
+        return {
+            left: area.left * CANVAS_WIDTH,
+            top: area.top * CANVAS_HEIGHT,
+            width: area.width * CANVAS_WIDTH,
+            height: area.height * CANVAS_HEIGHT,
+        };
+    };
+
+    const getDesignAreaCenter = (viewId = activeViewRef.current) => {
+        const area = getDesignArea(viewId);
+        if (!area) {
+            return { left: CANVAS_WIDTH / 2, top: CANVAS_HEIGHT / 2 };
+        }
+
+        return {
+            left: area.left + area.width / 2,
+            top: area.top + area.height / 2,
+        };
+    };
+
+    const fitObjectToArea = (object, viewId = activeViewRef.current) => {
+        if (!object || object.get?.('isBaseImage')) return;
+
+        const area = getDesignArea(viewId);
+        if (!area) return;
+
+        const padding = 0;
+        const maxWidth = Math.max(24, area.width - padding * 2);
+        const maxHeight = Math.max(24, area.height - padding * 2);
+        const scaledWidth = object.getScaledWidth?.() || object.getBoundingRect().width;
+        const scaledHeight = object.getScaledHeight?.() || object.getBoundingRect().height;
+
+        if (!scaledWidth || !scaledHeight) return;
+
+        const ratio = Math.min(maxWidth / scaledWidth, maxHeight / scaledHeight, 1);
+        if (ratio < 0.9999) {
+            object.scaleX = (object.scaleX || 1) * ratio;
+            object.scaleY = (object.scaleY || 1) * ratio;
+            object.setCoords();
+        }
+    };
+
+    const clampObjectToArea = (object, options = {}) => {
+        const { shouldFit = false } = options;
+        if (!object || object.get?.('isBaseImage')) return;
+
+        const viewId = object.get?.('viewId') || activeViewRef.current;
+
+        if (shouldFit) {
+            fitObjectToArea(object, viewId);
+        }
+
+        const area = getDesignArea(viewId);
+        if (!area) return;
+
+        object.setCoords();
+        const coords = object.getCoords?.();
+        if (!coords || coords.length === 0) return;
+
+        const xs = coords.map((point) => point.x);
+        const ys = coords.map((point) => point.y);
+        const left = Math.min(...xs);
+        const right = Math.max(...xs);
+        const top = Math.min(...ys);
+        const bottom = Math.max(...ys);
+
+        let deltaX = 0;
+        let deltaY = 0;
+
+        if (left < area.left) {
+            deltaX = area.left - left;
+        } else if (right > area.left + area.width) {
+            deltaX = area.left + area.width - right;
+        }
+
+        if (top < area.top) {
+            deltaY = area.top - top;
+        } else if (bottom > area.top + area.height) {
+            deltaY = area.top + area.height - bottom;
+        }
+
+        if (deltaX || deltaY) {
+            object.left += deltaX;
+            object.top += deltaY;
+            object.setCoords();
+        }
+    };
 
     const getAllDesignObjects = () => {
         const canvas = getCanvas();
@@ -268,6 +361,7 @@ export default function Features() {
 
         await loadProductBase(view);
         applyViewVisibility(view.id);
+        getAllDesignObjects().forEach((object) => clampObjectToArea(object, { shouldFit: true }));
         canvas.renderAll();
 
         isRestoringRef.current = false;
@@ -304,7 +398,25 @@ export default function Features() {
             refreshLayers();
         };
 
-        const handleObjectModified = () => {
+        const handleObjectTransforming = (event) => {
+            const target = event?.target;
+            if (!target || target.get?.('isBaseImage')) return;
+
+            const action = event?.transform?.action;
+            const shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
+
+            clampObjectToArea(target, { shouldFit });
+            canvas.renderAll();
+        };
+
+        const handleObjectModified = (event) => {
+            const activeObject = event?.target || canvas.getActiveObject();
+            if (activeObject) {
+                const action = event?.transform?.action;
+                const shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
+                clampObjectToArea(activeObject, { shouldFit });
+            }
+
             refreshLayers();
             syncSelectionState();
             recordHistory();
@@ -313,6 +425,9 @@ export default function Features() {
         canvas.on('selection:created', handleSelectionChange);
         canvas.on('selection:updated', handleSelectionChange);
         canvas.on('selection:cleared', handleSelectionChange);
+        canvas.on('object:moving', handleObjectTransforming);
+        canvas.on('object:scaling', handleObjectTransforming);
+        canvas.on('object:rotating', handleObjectTransforming);
         canvas.on('object:modified', handleObjectModified);
 
         window.addEventListener('keydown', handleKeyDown);
@@ -361,6 +476,7 @@ export default function Features() {
         setActiveView(view.id);
         await loadProductBase(view);
         applyViewVisibility(view.id);
+        getAllDesignObjects().forEach((object) => clampObjectToArea(object, { shouldFit: true }));
     };
 
     const addImageToCanvas = async (imageUrl, designId = null, sourceName = 'Uploaded image') => {
@@ -369,10 +485,14 @@ export default function Features() {
 
         const image = await FabricImage.fromURL(imageUrl);
         const objectId = crypto.randomUUID();
+        const center = getDesignAreaCenter();
+        const area = getDesignArea(activeViewRef.current);
 
         image.set({
-            left: CANVAS_WIDTH / 2 - 110,
-            top: CANVAS_HEIGHT / 2 - 80,
+            originX: 'center',
+            originY: 'center',
+            left: center.left,
+            top: center.top,
             selectable: true,
             evented: true,
             hasControls: true,
@@ -389,7 +509,14 @@ export default function Features() {
             layerName: sourceName,
         });
 
-        image.scaleToWidth(240);
+        // Scale image to fit within BOTH dimensions of the design area
+        const maxW = Math.max(60, (area?.width ?? CANVAS_WIDTH * 0.24) - 16);
+        const maxH = Math.max(60, (area?.height ?? CANVAS_HEIGHT * 0.438) - 16);
+        const scaleToFit = Math.min(maxW / (image.width || 1), maxH / (image.height || 1));
+        image.scaleX = scaleToFit;
+        image.scaleY = scaleToFit;
+        image.setCoords();
+        clampObjectToArea(image, { shouldFit: false });
 
         canvas.add(image);
         canvas.setActiveObject(image);
@@ -478,10 +605,13 @@ export default function Features() {
     const handleAddText = () => {
         const canvas = getCanvas();
         if (!canvas || !draftText.trim()) return;
+        const center = getDesignAreaCenter();
 
         const textObject = new IText(draftText.trim(), {
-            left: CANVAS_WIDTH / 2 - 100,
-            top: CANVAS_HEIGHT / 2 - 40,
+            originX: 'center',
+            originY: 'center',
+            left: center.left,
+            top: center.top,
             fill: draftTextColor,
             fontSize: draftFontSize,
             fontWeight: '700',
@@ -503,6 +633,8 @@ export default function Features() {
             viewId: activeViewRef.current,
         });
 
+        clampObjectToArea(textObject, { shouldFit: true });
+
         canvas.add(textObject);
         canvas.setActiveObject(textObject);
         canvas.renderAll();
@@ -516,10 +648,13 @@ export default function Features() {
     const addShape = (shapeKind) => {
         const canvas = getCanvas();
         if (!canvas) return;
+        const center = getDesignAreaCenter();
 
         const commonProps = {
-            left: CANVAS_WIDTH / 2 - 70,
-            top: CANVAS_HEIGHT / 2 - 70,
+            originX: 'center',
+            originY: 'center',
+            left: center.left,
+            top: center.top,
             fill: 'rgba(255,255,255,0.18)',
             stroke: '#111111',
             strokeWidth: 2,
@@ -535,6 +670,8 @@ export default function Features() {
         const shape = shapeKind === 'circle'
             ? new Circle({ ...commonProps, radius: 60 })
             : new Rect({ ...commonProps, width: 140, height: 140, rx: 24, ry: 24 });
+
+        clampObjectToArea(shape, { shouldFit: true });
 
         canvas.add(shape);
         canvas.setActiveObject(shape);
@@ -559,6 +696,8 @@ export default function Features() {
         if (typeof updates.text === 'string') {
             object.set('text', updates.text);
         }
+
+        clampObjectToArea(object, { shouldFit: true });
 
         canvas.renderAll();
         refreshLayers();
@@ -872,6 +1011,7 @@ export default function Features() {
                         canvasRef={canvasRef}
                         productViews={PRODUCT_VIEWS}
                         activeView={activeView}
+                        designArea={DESIGN_AREAS[activeView] || null}
                         onSwitchView={handleSwitchView}
                     />
 

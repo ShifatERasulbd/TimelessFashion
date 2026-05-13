@@ -26,3 +26,20 @@ export const PRODUCT_VIEWS = [
         url: '/storage/product_personalization/product_1/back.jpeg',
     },
 ];
+
+export const DESIGN_AREAS = {
+    front: {
+        left: 0.33,
+        top: 0.341,
+        width: 0.24,
+        height: 0.438,
+    },
+    back: {
+        left: 0.33,
+        top: 0.341,
+        width: 0.24,
+        height: 0.438,
+    },
+};
+
+
