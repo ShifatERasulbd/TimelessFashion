@@ -180,20 +180,26 @@ export default function CustomizePanel({
                             </div>
                             <div className="space-y-2">
                                 {uploadedDesigns.map((design) => (
-                                    <div key={design.id} className={cn('flex items-center gap-3 rounded-2xl border p-2', selectedDesignId === design.id && 'border-zinc-950 bg-white')}>
+                                    <div
+                                        key={design.id}
+                                        className={cn('flex items-center gap-3 rounded-2xl border p-2', selectedDesignId === design.id && 'border-zinc-950 bg-white')}
+                                        draggable
+                                        onDragStart={(event) => {
+                                            event.dataTransfer.effectAllowed = 'copy';
+                                            event.dataTransfer.setData('application/x-personalizer-design', JSON.stringify({
+                                                id: design.id,
+                                                name: design.name,
+                                                url: design.url,
+                                            }));
+                                        }}
+                                    >
                                         <img src={design.url} alt={design.name} className="h-14 w-14 rounded-xl object-cover" />
                                         <div className="min-w-0 flex-1">
                                             <p className="truncate text-sm font-medium">{design.name}</p>
                                         </div>
-                                        {usedDesignIds.has(design.id) ? (
-                                            <Button type="button" variant="outline" size="sm" disabled className="cursor-not-allowed opacity-60">
-                                                Used
-                                            </Button>
-                                        ) : (
-                                            <Button type="button" variant="outline" size="sm" onClick={() => onUseUploadedDesign(design)}>
-                                                Use
-                                            </Button>
-                                        )}
+                                        <Button type="button" variant="outline" size="sm" onClick={() => onUseUploadedDesign(design)}>
+                                            Use
+                                        </Button>
                                         <Button type="button" variant="ghost" size="icon-sm" onClick={() => onRemoveUploadedDesign(design.id)}>
                                             <Trash2 className="size-4" />
                                         </Button>

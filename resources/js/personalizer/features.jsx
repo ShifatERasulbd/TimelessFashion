@@ -242,6 +242,14 @@ export default function Features() {
     const updateImageVisibilityByArea = (object, viewId = activeViewRef.current) => {
         if (!object || object.get?.('layerType') !== 'image') return;
 
+        const objectViewId = object.get?.('viewId') || activeViewRef.current;
+        if (objectViewId !== viewId) {
+            object.set('visible', false);
+            object.set('opacity', 0);
+            object.set('outOfBounds', false);
+            return;
+        }
+
         const inArea = isObjectInsideArea(object, viewId);
         const manuallyHidden = object.get?.('hiddenByUser') === true;
 
@@ -454,7 +462,7 @@ export default function Features() {
 
         await loadProductBase(view);
         applyViewVisibility(view.id);
-        getAllDesignObjects().forEach((object) => {
+        getViewObjects(view.id).forEach((object) => {
             if (object.get?.('layerType') === 'image') {
                 updateImageVisibilityByArea(object, view.id);
             } else {
@@ -582,7 +590,7 @@ export default function Features() {
         setActiveView(view.id);
         await loadProductBase(view);
         applyViewVisibility(view.id);
-        getAllDesignObjects().forEach((object) => {
+        getViewObjects(view.id).forEach((object) => {
             if (object.get?.('layerType') === 'image') {
                 updateImageVisibilityByArea(object, view.id);
             } else {
@@ -591,10 +599,11 @@ export default function Features() {
         });
     };
 
-   const addImageToCanvas = async (
+    const addImageToCanvas = async (
     imageUrl,
     designId = null,
-    sourceName = 'Uploaded image'
+    sourceName = 'Uploaded image',
+    placement = null
 ) => {
     const canvas = getCanvas();
 
@@ -642,13 +651,13 @@ export default function Features() {
     /**
      * CENTER INSIDE DESIGN AREA
      */
-    const left = area
-        ? area.left + area.width / 2
-        : center.left;
+    const left = Number.isFinite(placement?.left)
+        ? placement.left
+        : (area ? area.left + area.width / 2 : center.left);
 
-    const top = area
-        ? area.top + area.height / 2
-        : center.top;
+    const top = Number.isFinite(placement?.top)
+        ? placement.top
+        : (area ? area.top + area.height / 2 : center.top);
 
     image.set({
         originX: 'center',
@@ -677,7 +686,7 @@ export default function Features() {
         designId,
         sourceName,
 
-        viewId: activeViewRef.current,
+        viewId: placement?.viewId || activeViewRef.current,
 
         layerType: 'image',
         layerName: sourceName,
@@ -718,6 +727,33 @@ export default function Features() {
 
     recordHistory();
 };
+
+    const handleCanvasDropDesign = async (designPayload, dropPoint) => {
+        const canvas = getCanvas();
+        if (!canvas || !designPayload?.url) return;
+
+        const rect = canvas.upperCanvasEl?.getBoundingClientRect?.();
+        const hasPoint = rect
+            && Number.isFinite(dropPoint?.clientX)
+            && Number.isFinite(dropPoint?.clientY)
+            && rect.width > 0
+            && rect.height > 0;
+
+        const placement = hasPoint
+            ? {
+                left: ((dropPoint.clientX - rect.left) / rect.width) * CANVAS_WIDTH,
+                top: ((dropPoint.clientY - rect.top) / rect.height) * CANVAS_HEIGHT,
+                viewId: activeViewRef.current,
+            }
+            : null;
+
+        await addImageToCanvas(
+            designPayload.url,
+            designPayload.id || null,
+            designPayload.name || 'Uploaded image',
+            placement
+        );
+    };
     const handleDesignUpload = async (event) => {
         const files = Array.from(event.target.files || []);
         if (files.length === 0) return;
@@ -1292,6 +1328,7 @@ export default function Features() {
                         productViews={PRODUCT_VIEWS}
                         activeView={activeView}
                         onSwitchView={handleSwitchView}
+                        onDropDesign={handleCanvasDropDesign}
                     />
 
                     <CustomizePanel
