@@ -103,7 +103,14 @@ export default function Features() {
 
     const getDesignArea = (viewId = activeViewRef.current) => {
         const area = DESIGN_AREAS[viewId];
-        if (!area) return null;
+        if (!area) {
+            return {
+                left: 0,
+                top: 0,
+                width: CANVAS_WIDTH,
+                height: CANVAS_HEIGHT,
+            };
+        }
 
         return {
             left: area.left * CANVAS_WIDTH,
@@ -146,7 +153,6 @@ export default function Features() {
             object.setCoords();
         }
     };
-
     const clampObjectToArea = (object, options = {}) => {
         const { shouldFit = false } = options;
         if (!object || object.get?.('isBaseImage')) return;
@@ -191,6 +197,38 @@ export default function Features() {
             object.top += deltaY;
             object.setCoords();
         }
+    };
+
+    const isObjectInsideArea = (object, viewId = activeViewRef.current) => {
+        const area = getDesignArea(viewId);
+        if (!object || !area) return true;
+
+        object.setCoords();
+        const coords = object.getCoords?.();
+        if (!coords || coords.length === 0) return true;
+
+        const xs = coords.map((point) => point.x);
+        const ys = coords.map((point) => point.y);
+        const left = Math.min(...xs);
+        const right = Math.max(...xs);
+        const top = Math.min(...ys);
+        const bottom = Math.max(...ys);
+
+        return left >= area.left
+            && right <= area.left + area.width
+            && top >= area.top
+            && bottom <= area.top + area.height;
+    };
+
+    const updateImageVisibilityByArea = (object, viewId = activeViewRef.current) => {
+        if (!object || object.get?.('layerType') !== 'image') return;
+
+        const inArea = isObjectInsideArea(object, viewId);
+        const manuallyHidden = object.get?.('hiddenByUser') === true;
+
+        object.set('outOfBounds', !inArea);
+        object.set('visible', !manuallyHidden);
+        object.set('opacity', inArea ? 1 : 0);
     };
 
     const getAllDesignObjects = () => {
@@ -299,7 +337,21 @@ export default function Features() {
         }
 
         getAllDesignObjects().forEach((object) => {
-            object.set('visible', object.get?.('viewId') === viewId && object.get('hiddenByUser') !== true);
+            const isActiveView = object.get?.('viewId') === viewId;
+            const manuallyHidden = object.get('hiddenByUser') === true;
+
+            if (!isActiveView || manuallyHidden) {
+                object.set('visible', false);
+                return;
+            }
+
+            object.set('visible', true);
+
+            if (object.get?.('layerType') === 'image') {
+                updateImageVisibilityByArea(object, viewId);
+            } else {
+                object.set('opacity', 1);
+            }
         });
 
         canvas.renderAll();
@@ -361,7 +413,13 @@ export default function Features() {
 
         await loadProductBase(view);
         applyViewVisibility(view.id);
-        getAllDesignObjects().forEach((object) => clampObjectToArea(object, { shouldFit: true }));
+        getAllDesignObjects().forEach((object) => {
+            if (object.get?.('layerType') === 'image') {
+                updateImageVisibilityByArea(object, view.id);
+            } else {
+                clampObjectToArea(object, { shouldFit: true });
+            }
+        });
         canvas.renderAll();
 
         isRestoringRef.current = false;
@@ -402,19 +460,26 @@ export default function Features() {
             const target = event?.target;
             if (!target || target.get?.('isBaseImage')) return;
 
-            const action = event?.transform?.action;
-            const shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
-
-            clampObjectToArea(target, { shouldFit });
+            if (target.get?.('layerType') === 'image') {
+                updateImageVisibilityByArea(target);
+            } else {
+                const action = event?.transform?.action;
+                const shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
+                clampObjectToArea(target, { shouldFit });
+            }
             canvas.renderAll();
         };
 
         const handleObjectModified = (event) => {
             const activeObject = event?.target || canvas.getActiveObject();
             if (activeObject) {
-                const action = event?.transform?.action;
-                const shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
-                clampObjectToArea(activeObject, { shouldFit });
+                if (activeObject.get?.('layerType') === 'image') {
+                    updateImageVisibilityByArea(activeObject);
+                } else {
+                    const action = event?.transform?.action;
+                    const shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
+                    clampObjectToArea(activeObject, { shouldFit });
+                }
             }
 
             refreshLayers();
@@ -476,58 +541,142 @@ export default function Features() {
         setActiveView(view.id);
         await loadProductBase(view);
         applyViewVisibility(view.id);
-        getAllDesignObjects().forEach((object) => clampObjectToArea(object, { shouldFit: true }));
-    };
-
-    const addImageToCanvas = async (imageUrl, designId = null, sourceName = 'Uploaded image') => {
-        const canvas = getCanvas();
-        if (!canvas) return;
-
-        const image = await FabricImage.fromURL(imageUrl);
-        const objectId = crypto.randomUUID();
-        const center = getDesignAreaCenter();
-        const area = getDesignArea(activeViewRef.current);
-
-        image.set({
-            originX: 'center',
-            originY: 'center',
-            left: center.left,
-            top: center.top,
-            selectable: true,
-            evented: true,
-            hasControls: true,
-            hasBorders: true,
-            cornerStyle: 'circle',
-            borderColor: '#2563eb',
-            cornerColor: '#2563eb',
-            transparentCorners: false,
-            objectId,
-            designId,
-            sourceName,
-            viewId: activeViewRef.current,
-            layerType: 'image',
-            layerName: sourceName,
+        getAllDesignObjects().forEach((object) => {
+            if (object.get?.('layerType') === 'image') {
+                updateImageVisibilityByArea(object, view.id);
+            } else {
+                clampObjectToArea(object, { shouldFit: true });
+            }
         });
-
-        // Scale image to fit within BOTH dimensions of the design area
-        const maxW = Math.max(60, (area?.width ?? CANVAS_WIDTH * 0.24) - 16);
-        const maxH = Math.max(60, (area?.height ?? CANVAS_HEIGHT * 0.438) - 16);
-        const scaleToFit = Math.min(maxW / (image.width || 1), maxH / (image.height || 1));
-        image.scaleX = scaleToFit;
-        image.scaleY = scaleToFit;
-        image.setCoords();
-        clampObjectToArea(image, { shouldFit: false });
-
-        canvas.add(image);
-        canvas.setActiveObject(image);
-        canvas.renderAll();
-
-        setActiveTool('images');
-        syncSelectionState();
-        refreshLayers();
-        recordHistory();
     };
 
+   const addImageToCanvas = async (
+    imageUrl,
+    designId = null,
+    sourceName = 'Uploaded image'
+) => {
+    const canvas = getCanvas();
+
+    if (!canvas) return;
+
+    const image = await FabricImage.fromURL(imageUrl);
+
+    const objectId = crypto.randomUUID();
+
+    const area = getDesignArea(activeViewRef.current);
+
+    const center = getDesignAreaCenter();
+
+    /**
+     * DESIGN AREA SIZE
+     */
+    const maxWidth = Math.max(60, (area?.width || CANVAS_WIDTH * 0.45) - 10);
+
+    const maxHeight = Math.max(60, (area?.height || CANVAS_HEIGHT * 0.45) - 10);
+
+    /**
+     * ORIGINAL IMAGE SIZE
+     */
+    const imageWidth = image.width || 1;
+    const imageHeight = image.height || 1;
+
+    /**
+     * PERFECT CONTAIN SCALE
+     *
+     * Keeps entire image inside box.
+     * No overflow.
+     * No cropping.
+     */
+    const scale = Math.min(
+        maxWidth / imageWidth,
+        maxHeight / imageHeight
+    );
+
+    /**
+     * FINAL RENDER SIZE
+     */
+    const finalWidth = imageWidth * scale;
+    const finalHeight = imageHeight * scale;
+
+    /**
+     * CENTER INSIDE DESIGN AREA
+     */
+    const left = area
+        ? area.left + area.width / 2
+        : center.left;
+
+    const top = area
+        ? area.top + area.height / 2
+        : center.top;
+
+    image.set({
+        originX: 'center',
+        originY: 'center',
+
+        left,
+        top,
+
+        scaleX: scale,
+        scaleY: scale,
+
+        selectable: true,
+        evented: true,
+
+        hasControls: true,
+        hasBorders: true,
+
+        cornerStyle: 'circle',
+
+        borderColor: '#2563eb',
+        cornerColor: '#2563eb',
+
+        transparentCorners: false,
+
+        objectId,
+        designId,
+        sourceName,
+
+        viewId: activeViewRef.current,
+
+        layerType: 'image',
+        layerName: sourceName,
+
+        // Lock flip for better UX
+        lockScalingFlip: true,
+    });
+
+    /**
+     * IMPORTANT
+     * Prevent oversized images after scaling
+     */
+    image.setControlsVisibility({
+        mtr: true,
+    });
+
+    image.setCoords();
+
+    /**
+     * FINAL SAFETY CLAMP
+     */
+    clampObjectToArea(image, {
+        shouldFit: true,
+    });
+    updateImageVisibilityByArea(image);
+
+    canvas.add(image);
+
+    canvas.setActiveObject(image);
+
+    canvas.renderAll();
+
+    setActiveTool('images');
+
+    syncSelectionState();
+
+    refreshLayers();
+
+    recordHistory();
+};
     const handleDesignUpload = async (event) => {
         const files = Array.from(event.target.files || []);
         if (files.length === 0) return;
@@ -713,8 +862,17 @@ export default function Features() {
         if (!canvas || !object) return;
 
         const nextVisible = object.visible === false;
-        object.set('visible', nextVisible);
         object.set('hiddenByUser', !nextVisible);
+
+        if (object.get?.('layerType') === 'image') {
+            if (nextVisible) {
+                updateImageVisibilityByArea(object);
+            } else {
+                object.set('visible', false);
+            }
+        } else {
+            object.set('visible', nextVisible);
+        }
 
         if (!nextVisible && canvas.getActiveObject() === object) {
             canvas.discardActiveObject();
@@ -810,7 +968,10 @@ export default function Features() {
 
         const overlays = sourceCanvas
             .getObjects()
-            .filter((object) => !object.get?.('isBaseImage') && object.get?.('viewId') === view.id && object.get?.('hiddenByUser') !== true);
+            .filter((object) => !object.get?.('isBaseImage')
+                && object.get?.('viewId') === view.id
+                && object.get?.('hiddenByUser') !== true
+                && (object.get?.('layerType') !== 'image' || object.get?.('outOfBounds') !== true));
 
         for (const object of overlays) {
             const cloned = await object.clone();
@@ -1011,7 +1172,6 @@ export default function Features() {
                         canvasRef={canvasRef}
                         productViews={PRODUCT_VIEWS}
                         activeView={activeView}
-                        designArea={DESIGN_AREAS[activeView] || null}
                         onSwitchView={handleSwitchView}
                     />
 

@@ -1,4 +1,4 @@
-export const CANVAS_WIDTH = 760;
+export const CANVAS_WIDTH = 555;
 export const CANVAS_HEIGHT = 760;
 export const PRODUCT_PRICE = '$49.99';
 export const HISTORY_LIMIT = 40;
@@ -29,17 +29,19 @@ export const PRODUCT_VIEWS = [
 
 export const DESIGN_AREAS = {
     front: {
-        left: 0.33,
+        left: 0.32,
         top: 0.341,
-        width: 0.24,
+        width: 0.39,
         height: 0.438,
     },
     back: {
-        left: 0.33,
+        left: 0.28,
         top: 0.341,
         width: 0.24,
         height: 0.438,
     },
 };
+
+
 
 

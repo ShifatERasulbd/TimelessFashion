@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils';
 
 import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../config';
 
-export default function CanvasStage({ canvasRef, productViews, activeView, onSwitchView, designArea }) {
+export default function CanvasStage({ canvasRef, productViews, activeView, onSwitchView }) {
     return (
         <section className="overflow-hidden rounded-[32px] border border-zinc-200 bg-white shadow-sm">
             <div className="flex  flex-col">
@@ -14,18 +14,6 @@ export default function CanvasStage({ canvasRef, productViews, activeView, onSwi
                                 className="block max-w-full rounded-[28px]"
                                 style={{ width: '100%', height: 'auto', aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}` }}
                             />
-
-                            {designArea && (
-                                <div
-                                    className="pointer-events-none absolute z-20 border-2 border-dotted border-red-500 shadow-[0_0_0_1px_rgba(255,255,255,0.55)]"
-                                    style={{
-                                        left: `${designArea.left * 100}%`,
-                                        top: `${designArea.top * 100}%`,
-                                        width: `${designArea.width * 100}%`,
-                                        height: `${designArea.height * 100}%`,
-                                    }}
-                                />
-                            )}
                         </div>
                     </div>
                 </div> 
