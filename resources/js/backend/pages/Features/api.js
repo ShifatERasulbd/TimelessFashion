@@ -1,4 +1,4 @@
-async function ensureCsrfCookie() {
+ async function ensureCsrfCookie() {
     await fetch('/sanctum/csrf-cookie', {
         credentials: 'include',
         headers: {
@@ -13,7 +13,6 @@ async function requestJson(url, options = {}) {
         credentials: 'include',
         headers: {
             Accept: 'application/json',
-            'Content-Type': 'application/json',
             'X-Requested-With': 'XMLHttpRequest',
             ...(options.headers || {}),
         },
@@ -34,34 +33,53 @@ async function requestJson(url, options = {}) {
     return payload;
 }
 
-export async function fetchUsers() {
-    const payload = await requestJson('/api/users');
+function buildFeatureFormData(data = {}, asUpdate = false) {
+    const formData = new FormData();
+
+    formData.append('title', data.title || '');
+    formData.append('description', data.description || '');
+
+    if (data.icon instanceof File) {
+        formData.append('icon', data.icon);
+    }
+
+
+    if (asUpdate) {
+        formData.append('_method', 'PUT');
+    }
+
+    return formData;
+}
+// Features API All entries
+export async function fetchFeatures(){
+    const payload =await requestJson('/api/features');
     return Array.isArray(payload) ? payload : [];
 }
 
-export async function fetchUser(id) {
-    return requestJson(`/api/users/${id}`);
+export async function  fetchFeature(id){
+    return await requestJson(`/api/features/${id}`);
 }
 
-export async function createUser(data) {
+export async function createFeature(data){
     await ensureCsrfCookie();
-    return requestJson('/api/users', {
+    return requestJson('/api/features',{
         method: 'POST',
-        body: JSON.stringify(data),
+        body: buildFeatureFormData(data)
     });
 }
 
-export async function updateUser(id, data) {
+export async function updateFeature(id,data){
     await ensureCsrfCookie();
-    return requestJson(`/api/users/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
+    return requestJson(`/api/features/${id}`,{
+        method: 'POST',
+        body: buildFeatureFormData(data, true)
     });
 }
 
-export async function deleteUser(id) {
+export async function deleteFeature(id){
     await ensureCsrfCookie();
-    return requestJson(`/api/users/${id}`, {
-        method: 'DELETE',
+    return requestJson(`/api/features/${id}`,{
+        method: 'DELETE'
     });
 }
+

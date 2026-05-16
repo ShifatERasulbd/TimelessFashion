@@ -3,7 +3,7 @@ import { LoginForm } from '@/components/login-form';
 import { Toaster } from '@/components/ui/sonner';
 import { AppProvider } from '@/context/AppContext';
 import AppLayout from '@/layouts/AppLayout';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 
 function lazyWithRetry(importer, key) {
     return lazy(async () => {
@@ -29,20 +29,22 @@ function lazyWithRetry(importer, key) {
 }
 
 const Dashboard = lazyWithRetry(() => import('@/pages/dashboard'), 'dashboard');
-// User Management
-const Users     = lazyWithRetry(() => import('@/pages/User/user'), 'users');
-const AddUser   = lazyWithRetry(() => import('@/pages/User/addUser'), 'add-user');
-const EditUser  = lazyWithRetry(() => import('@/pages/User/editUser'), 'edit-user');
 // Hero Management
 const Heroes    = lazyWithRetry(() => import('@/pages/Hero/hero'), 'hero');
 const AddHero   = lazyWithRetry(() => import('@/pages/Hero/addHero'), 'add-hero');
 const EditHero  = lazyWithRetry(() => import('@/pages/Hero/editHero'), 'edit-hero');
 
+// Personalization Management
 const PersonalizerFeatures = lazyWithRetry(() => import('../personalizer/features'), 'personalizer-features');
 const PersonalizerConfirmOrder = lazyWithRetry(() => import('../personalizer/confirm-order'), 'personalizer-confirm-order');
 const PersonalizationOrders = lazyWithRetry(() => import('@/pages/Personalization/orders'), 'personalization-orders');
 const ViewPersonalizationOrder = lazyWithRetry(() => import('@/pages/Personalization/viewOrder'), 'personalization-order-view');
 const EditPersonalizationOrder = lazyWithRetry(() => import('@/pages/Personalization/editOrder'), 'personalization-order-edit');
+
+// Features Management
+const Features = lazyWithRetry(()=> import ('@/pages/Features/features'), 'features');
+const AddFeature = lazyWithRetry(() => import('@/pages/Features/addFeature'), 'add-feature');
+const EditFeature = lazyWithRetry(() => import('@/pages/Features/editFeature'), 'edit-feature');
 
 
 
@@ -63,10 +65,6 @@ export default function App() {
                         {/* user Managemnent */}
                         <Route path="/admin" element={<AppLayout />}>
                             <Route path="dashboard" element={<Dashboard />} />
-                            {/* user  */}
-                            <Route path="users" element={<Users />} />
-                            <Route path="users/add" element={<AddUser />} />
-                            <Route path="users/:id/edit" element={<EditUser />} />
                             {/* Hero  */}
                             <Route path="hero" element={<Heroes />} />
                             <Route path="hero/add" element={<AddHero />} />
@@ -77,12 +75,15 @@ export default function App() {
                             <Route path="personalization/orders/:id" element={<ViewPersonalizationOrder />} />
                             <Route path="personalization/orders/:id/edit" element={<EditPersonalizationOrder />} />
 
+                            {/* Features Management */}
+                            <Route path="features" element={<Features />} />
+                            <Route path="features/add" element={<AddFeature />} />
+                            <Route path="features/:id/edit" element={<EditFeature />} />
+
                         </Route>
 
                         <Route path="/personalizer/features" element={<PersonalizerFeatures />} />
                         <Route path="/personalizer/confirm-order" element={<PersonalizerConfirmOrder />} />
-                        <Route path="/admin/features" element={<Navigate to="/personalizer/features" replace />} />
-
                         <Route path="/" element={<main />} />
 
                         {/* Hero Management */}

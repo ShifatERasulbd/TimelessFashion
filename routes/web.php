@@ -3,7 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HeroController;
 use App\Http\Controllers\PersonalizationController;
-use App\Http\Controllers\UserController;
+use App\Http\Controllers\FeaturesController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -25,18 +25,22 @@ Route::prefix('api')->group(function () {
     Route::patch('/personalizations/{personalization}/confirm', [PersonalizationController::class, 'confirm']);
 
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('/user', [UserController::class, 'me']);
+        
 
         Route::post('/logout', [AuthController::class, 'logout']);
-        Route::apiResource('/heroes', HeroController::class);
+        // personalization controller
         Route::get('/personalizations', [PersonalizationController::class, 'index']);
         Route::get('/personalizations/{personalization}', [PersonalizationController::class, 'show']);
         Route::put('/personalizations/{personalization}', [PersonalizationController::class, 'update']);
         Route::delete('/personalizations/{personalization}', [PersonalizationController::class, 'destroy']);
+
+        // Hero Controller
+        Route::apiResource('/heroes', HeroController::class);
+
+        // Features Controller
+        Route::apiResource('/features', FeaturesController::class);
        
         
-        // Season Controller
-        Route::apiResource('/seasons', SeasonController::class);
 
     });
 });

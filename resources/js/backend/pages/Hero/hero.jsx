@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import HeroTable from '@/components/hero/table';
 
+
 import { deleteHero, fetchHeroes } from './api';
 
 export default function Heroes() {
