@@ -2,7 +2,8 @@ import {
     Gauge,
     Palette,
     Sparkles,
-    Blocks ,
+    Blocks,
+    LayoutList,
     LogOut
   
 } from 'lucide-react';
@@ -29,7 +30,8 @@ const homeItems = [
 
 const websiteItems = [
     { title: 'Hero', icon: Sparkles, path: '/admin/hero' },
-    {title: 'Features', icon: Blocks, path: '/admin/features'},
+    { title: 'Features', icon: Blocks, path: '/admin/features' },
+    { title: 'Categories', icon: LayoutList, path: '/admin/category' },
     { title: 'Personalization Orders', icon: Palette, path: '/admin/personalization/orders' },
 ]
 

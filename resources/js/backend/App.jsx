@@ -46,6 +46,11 @@ const Features = lazyWithRetry(()=> import ('@/pages/Features/features'), 'featu
 const AddFeature = lazyWithRetry(() => import('@/pages/Features/addFeature'), 'add-feature');
 const EditFeature = lazyWithRetry(() => import('@/pages/Features/editFeature'), 'edit-feature');
 
+// Category Management
+const Categories = lazyWithRetry(() => import('@/pages/Category/category'), 'categories');
+const AddCategory = lazyWithRetry(() => import('@/pages/Category/addCategory'), 'add-category');
+const EditCategory = lazyWithRetry(() => import('@/pages/Category/editCategory'), 'edit-category');
+
 
 
 export default function App() {
@@ -79,6 +84,11 @@ export default function App() {
                             <Route path="features" element={<Features />} />
                             <Route path="features/add" element={<AddFeature />} />
                             <Route path="features/:id/edit" element={<EditFeature />} />
+
+                            {/* Category Management */}
+                            <Route path="category" element={<Categories />} />
+                            <Route path="category/add" element={<AddCategory />} />
+                            <Route path="category/:id/edit" element={<EditCategory />} />
 
                         </Route>
 

@@ -4,7 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HeroController;
 use App\Http\Controllers\PersonalizationController;
 use App\Http\Controllers\FeaturesController;
-
+use App\Http\Controllers\CategoryController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -39,6 +39,9 @@ Route::prefix('api')->group(function () {
 
         // Features Controller
         Route::apiResource('/features', FeaturesController::class);
+
+        // Category Controller
+        Route::apiResource('/categories', CategoryController::class);
        
         
 
