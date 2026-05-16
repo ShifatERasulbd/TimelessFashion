@@ -4,7 +4,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAppContext } from '@/context/AppContext';
-
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/components/ui/table';
 import { fetchPersonalizationOrder } from './api';
 
 function formatDate(value) {
@@ -23,6 +30,25 @@ function formatCurrency(value) {
     return `$${numberValue.toFixed(2)}`;
 }
 
+function normalizeMeta(meta) {
+    if (meta && typeof meta === 'object' && !Array.isArray(meta)) return meta;
+
+    if (typeof meta === 'string' && meta.trim() !== '') {
+        try {
+            const parsed = JSON.parse(meta);
+            if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                return parsed;
+            }
+        } catch {
+            return {};
+        }
+    }
+
+    return {};
+}
+
+const IMAGE_URL_KEYS = new Set(['image_url', 'front_image_url', 'back_image_url', 'image_path', 'front_image_path', 'back_image_path']);
+const SKIP_META_KEYS = new Set(['image_layers', ...IMAGE_URL_KEYS]);
 export default function ViewPersonalizationOrder() {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -71,7 +97,8 @@ export default function ViewPersonalizationOrder() {
     }
 
     const frontImageUrl = order?.front_image_url || order?.image_url || '';
-    const backImageUrl = order?.back_image_url || order?.meta?.back_image_url || '';
+    const normalizedMeta = normalizeMeta(order?.meta);
+    const backImageUrl = order?.back_image_url || normalizedMeta?.back_image_url || '';
 
     return (
         <div className="space-y-4">
@@ -148,6 +175,74 @@ export default function ViewPersonalizationOrder() {
                                 </div>
                             </div>
                         </div>
+
+                        {Array.isArray(normalizedMeta?.image_layers) && normalizedMeta.image_layers.length > 0 && (
+                            <div className="mt-6">
+                                <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-[0.1em]">Uploaded Image Layers</h3>
+                                <div className="overflow-hidden rounded-xl border">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead>#</TableHead>
+                                                <TableHead>Name</TableHead>
+                                                <TableHead>View</TableHead>
+                                                <TableHead>Width (px)</TableHead>
+                                                <TableHead>Height (px)</TableHead>
+                                                <TableHead>Rotate (deg)</TableHead>
+                                                <TableHead>Scale (%)</TableHead>
+                                                <TableHead>Position Left (%)</TableHead>
+                                                <TableHead>Position Top (%)</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {normalizedMeta.image_layers.map((layer, index) => (
+                                                <TableRow key={index}>
+                                                    <TableCell className="text-muted-foreground">{index + 1}</TableCell>
+                                                    <TableCell className="max-w-[160px] truncate font-medium" title={layer.name}>{layer.name}</TableCell>
+                                                    <TableCell className="capitalize">{layer.view ?? '-'}</TableCell>
+                                                    <TableCell>{layer.width_px ?? '-'}</TableCell>
+                                                    <TableCell>{layer.height_px ?? '-'}</TableCell>
+                                                    <TableCell>{layer.rotate_deg ?? '-'}</TableCell>
+                                                    <TableCell>{layer.scale_percent ?? '-'}</TableCell>
+                                                    <TableCell>{layer.position_left_percent ?? '-'}</TableCell>
+                                                    <TableCell>{layer.position_top_percent ?? '-'}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                            </div>
+                        )}
+
+                        {Object.keys(normalizedMeta).some((k) => !SKIP_META_KEYS.has(k)) && (
+                            <div className="mt-6">
+                                <h3 className="mb-3 text-sm font-semibold text-muted-foreground uppercase tracking-[0.1em]">Order Details</h3>
+                                <div className="rounded-xl border bg-muted/10 p-4">
+                                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                                        {Object.entries(normalizedMeta)
+                                            .filter(([key]) => !SKIP_META_KEYS.has(key))
+                                            .map(([key, value]) => (
+                                                <div key={key} className="flex flex-col gap-1 rounded-lg border bg-background p-3">
+                                                    <span className="text-xs font-medium capitalize text-muted-foreground">
+                                                        {key.replace(/_/g, ' ')}
+                                                    </span>
+                                                    {value === null || value === undefined ? (
+                                                        <span className="text-sm text-muted-foreground">-</span>
+                                                    ) : typeof value === 'object' ? (
+                                                        <pre className="mt-1 overflow-x-auto whitespace-pre-wrap break-all rounded bg-muted p-2 text-xs">
+                                                            {JSON.stringify(value, null, 2)}
+                                                        </pre>
+                                                    ) : (
+                                                        <span className="inline-block rounded bg-muted px-2 py-0.5 text-sm font-medium capitalize">
+                                                            {String(value)}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             )}

@@ -69,6 +69,7 @@ export default function Features() {
     const historyRef = useRef([]);
     const redoRef = useRef([]);
     const isRestoringRef = useRef(false);
+    const uploadedDesignsRef = useRef([]);
 
     const [isReady, setIsReady] = useState(false);
     const [activeTool, setActiveTool] = useState('upload');
@@ -264,7 +265,7 @@ export default function Features() {
 
         return canvas
             .getObjects()
-            .filter((object) => !object.get?.('isBaseImage'));
+            .filter((object) => !object.get?.('isBaseImage') && !object.get?.('isDesignAreaGuide'));
     };
 
     const getViewObjects = (viewId = activeViewRef.current) => {
@@ -413,7 +414,7 @@ export default function Features() {
         if (!canvas) return;
 
         canvas.getObjects()
-            .filter((object) => object.get?.('isBaseImage'))
+            .filter((object) => object.get?.('isBaseImage') || object.get?.('isDesignAreaGuide'))
             .forEach((object) => canvas.remove(object));
 
         const image = await FabricImage.fromURL(view.url);
@@ -569,10 +570,14 @@ export default function Features() {
     }, [isReady]);
 
     useEffect(() => {
-        return () => {
-            uploadedDesigns.forEach((design) => URL.revokeObjectURL(design.url));
-        };
+        uploadedDesignsRef.current = uploadedDesigns;
     }, [uploadedDesigns]);
+
+    useEffect(() => {
+        return () => {
+            uploadedDesignsRef.current.forEach((design) => URL.revokeObjectURL(design.url));
+        };
+    }, []);
 
     const selectObject = (objectId) => {
         const canvas = getCanvas();
@@ -1198,6 +1203,37 @@ export default function Features() {
                     unit_price: unitPriceNumber,
                     total_price: totalPrice,
                     order_status: 'pending',
+                    meta: {
+                        product_color: productColor,
+                        active_view: activeViewRef.current,
+                        image_layers: PRODUCT_VIEWS.flatMap((view) =>
+                            getViewObjects(view.id)
+                                .filter((obj) => obj.get?.('layerType') === 'image' || obj.type === 'image')
+                                .map((obj) => {
+                                    const scaleX = Number(obj.scaleX || 1);
+                                    const scaleY = Number(obj.scaleY || 1);
+                                    const baseWidth = Number(obj.width || 0);
+                                    const baseHeight = Number(obj.height || 0);
+                                    const designArea = getDesignArea(view.id);
+                                    const left = Number(obj.left || 0);
+                                    const top = Number(obj.top || 0);
+                                    return {
+                                        view: view.id,
+                                        name: obj.get?.('sourceName') || 'Uploaded image',
+                                        width_px: Number((baseWidth * scaleX).toFixed(2)),
+                                        height_px: Number((baseHeight * scaleY).toFixed(2)),
+                                        rotate_deg: Number(Number(obj.angle || 0).toFixed(2)),
+                                        scale_percent: Number((((scaleX + scaleY) / 2) * 100).toFixed(2)),
+                                        position_left_percent: designArea?.width
+                                            ? Number((((left - designArea.left) / designArea.width) * 100).toFixed(2))
+                                            : 0,
+                                        position_top_percent: designArea?.height
+                                            ? Number((((top - designArea.top) / designArea.height) * 100).toFixed(2))
+                                            : 0,
+                                    };
+                                })
+                        ),
+                    },
                 }),
             });
 
@@ -1210,6 +1246,7 @@ export default function Features() {
             setSavedUrl(imageUrl);
 
             const orderDetails = {
+                id: data?.data?.id,
                 imageUrl,
                 frontImageUrl: data?.data?.front_image_url || imageUrl,
                 backImageUrl: data?.data?.back_image_url || '',

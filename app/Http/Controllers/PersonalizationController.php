@@ -10,6 +10,22 @@ use Illuminate\Support\Str;
 
 class PersonalizationController extends Controller
 {
+    private function normalizeMeta(mixed $meta): array
+    {
+        if (is_array($meta)) {
+            return $meta;
+        }
+
+        if (is_string($meta) && trim($meta) !== '') {
+            $decoded = json_decode($meta, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return [];
+    }
+
     public function index(): JsonResponse
     {
         $items = Personalization::query()
@@ -157,6 +173,20 @@ class PersonalizationController extends Controller
         ]);
     }
 
+    public function confirm(Personalization $personalization): JsonResponse
+    {
+        if ($personalization->order_status !== 'pending') {
+            return response()->json(['message' => 'Order has already been processed.'], 422);
+        }
+
+        $personalization->update(['order_status' => 'confirmed']);
+
+        return response()->json([
+            'message' => 'Order placed successfully.',
+            'data' => $this->transformRecord($personalization->fresh()),
+        ]);
+    }
+
     public function destroy(Personalization $personalization): JsonResponse
     {
         if ($personalization->image_path && Storage::disk('public')->exists($personalization->image_path)) {
@@ -182,13 +212,25 @@ class PersonalizationController extends Controller
 
     private function transformRecord(Personalization $record): array
     {
-        $meta = $record->meta ?? [];
+        $meta = $this->normalizeMeta($record->meta);
         $frontImagePath = $record->front_image_path ?: ($meta['front_image_path'] ?? null);
         $backImagePath = $record->back_image_path ?: ($meta['back_image_path'] ?? null);
         $quantity = $record->quantity ?? ($meta['quantity'] ?? 1);
         $unitPrice = (float) ($record->unit_price ?? ($meta['unit_price'] ?? 0));
         $totalPrice = (float) ($record->total_price ?? ($unitPrice * max(1, (int) $quantity)));
         $orderStatus = $record->order_status ?? ($meta['order_status'] ?? 'pending');
+
+        $displayMeta = array_merge(
+            array_filter([
+                'image_path'       => $record->image_path,
+                'front_image_path' => $frontImagePath,
+                'back_image_path'  => $backImagePath,
+                'image_url'        => Storage::url($record->image_path),
+                'front_image_url'  => $frontImagePath ? Storage::url($frontImagePath) : Storage::url($record->image_path),
+                'back_image_url'   => $backImagePath ? Storage::url($backImagePath) : null,
+            ], fn ($v) => !is_null($v)),
+            $meta
+        );
 
         return [
             'id' => $record->id,
@@ -202,7 +244,7 @@ class PersonalizationController extends Controller
             'unit_price' => round($unitPrice, 2),
             'total_price' => round($totalPrice, 2),
             'order_status' => strtolower((string) $orderStatus),
-            'meta' => $meta,
+            'meta' => $displayMeta,
             'created_at' => optional($record->created_at)?->toISOString(),
             'updated_at' => optional($record->updated_at)?->toISOString(),
         ];

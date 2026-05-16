@@ -35,8 +35,45 @@ export default function ConfirmOrder() {
         }
     }, [orderDetails]);
 
-    const handlePlaceOrder = () => {
-        toast.success('Order confirmed. We will contact you soon.');
+    const [isPlacing, setIsPlacing] = useState(false);
+    const [isPlaced, setIsPlaced] = useState(false);
+
+    const handlePlaceOrder = async () => {
+        if (!orderDetails?.id) {
+            toast.error('Order reference is missing. Please go back and try again.');
+            return;
+        }
+
+        setIsPlacing(true);
+        try {
+            await fetch('/sanctum/csrf-cookie', {
+                credentials: 'include',
+                headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            });
+
+            const response = await fetch(`/api/personalizations/${orderDetails.id}/confirm`, {
+                method: 'PATCH',
+                credentials: 'include',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.message || 'Failed to place order.');
+            }
+
+            sessionStorage.removeItem('personalizer:pendingOrder');
+            setIsPlaced(true);
+            toast.success('Order placed! We will contact you soon.');
+        } catch (error) {
+            toast.error(error.message || 'Unable to place the order. Please try again.');
+        } finally {
+            setIsPlacing(false);
+        }
     };
 
     if (!orderDetails) {
@@ -129,13 +166,22 @@ export default function ConfirmOrder() {
                 </div>
 
                 <div className="mt-6 flex flex-wrap items-center justify-end gap-3">
-                    <Button type="button" variant="outline" onClick={() => navigate('/personalizer/features')}>
-                        Edit design
-                    </Button>
-                    <Button type="button" onClick={handlePlaceOrder}>
-                        <ShoppingBag className="size-4" />
-                        Place order
-                    </Button>
+                    {isPlaced ? (
+                        <div className="flex items-center gap-2 text-sm font-medium text-emerald-600">
+                            <CheckCircle2 className="size-4" />
+                            Order placed successfully!
+                        </div>
+                    ) : (
+                        <>
+                            <Button type="button" variant="outline" disabled={isPlacing} onClick={() => navigate('/personalizer/features')}>
+                                Edit design
+                            </Button>
+                            <Button type="button" disabled={isPlacing} onClick={handlePlaceOrder}>
+                                <ShoppingBag className="size-4" />
+                                {isPlacing ? 'Placing order…' : 'Place order'}
+                            </Button>
+                        </>
+                    )}
                 </div>
             </div>
         </main>
