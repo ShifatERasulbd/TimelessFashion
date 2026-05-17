@@ -66,6 +66,7 @@ export default function CategoryTable({
                             <TableHead className="w-[100px]">SL No</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Slug</TableHead>
+                            <TableHead>Home Page</TableHead>
                            
                             <TableHead className="text-right">Action</TableHead>
                         </TableRow>
@@ -73,7 +74,7 @@ export default function CategoryTable({
                     <TableBody>
                         {isLoading && (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     Loading categories...
                                 </TableCell>
                             </TableRow>
@@ -81,7 +82,7 @@ export default function CategoryTable({
 
                         {!isLoading && categories.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     No categories found.
                                 </TableCell>
                             </TableRow>
@@ -89,7 +90,7 @@ export default function CategoryTable({
 
                         {!isLoading && filtered.length === 0 && categories.length > 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     No categories match your search.
                                 </TableCell>
                             </TableRow>
@@ -101,6 +102,17 @@ export default function CategoryTable({
                                     <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
                                     <TableCell className="font-medium">{category.name}</TableCell>
                                     <TableCell className="max-w-[380px] truncate">{category.slug}</TableCell>
+                                    <TableCell>
+                                        {category.show_homepage ? (
+                                            <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                                                Shown
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                                                Hidden
+                                            </span>
+                                        )}
+                                    </TableCell>
                                    
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1">

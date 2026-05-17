@@ -11,6 +11,11 @@ class Category extends Model
     protected $fillable = [
         'name',
         'slug',
+        'show_homepage',
+    ];
+
+    protected $casts = [
+        'show_homepage' => 'boolean',
     ];
 
     public function subCategories()

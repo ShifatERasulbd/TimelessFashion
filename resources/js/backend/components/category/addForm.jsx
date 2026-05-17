@@ -7,6 +7,7 @@ import {
 	CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -57,6 +58,26 @@ export default function AddForm({
 							placeholder="e.g. mens-wear"
 						/>
 						{errors.slug && <p className="text-xs text-destructive">{errors.slug[0]}</p>}
+					</div>
+					<div className="flex items-center space-x-2">
+						<Checkbox
+							id="show-homepage"
+							name="show_homepage"
+							checked={Boolean(form.show_homepage)}
+							onCheckedChange={(checked) =>
+								onChange({
+									target: {
+										name: 'show_homepage',
+										type: 'checkbox',
+										checked: checked === true,
+										value: checked === true,
+									},
+								})
+							}
+						/>
+						<Label htmlFor="show-homepage">
+							Show on Home Page
+						</Label>
 					</div>
 				</CardContent>
 

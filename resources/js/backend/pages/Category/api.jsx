@@ -38,6 +38,7 @@ function buildCategoryFormData(data = {}, asUpdate = false) {
 
     formData.append('name', data.name || '');
     formData.append('slug', data.slug || '');
+    formData.append('show_homepage', data.show_homepage ? '1' : '0');
 
   
 

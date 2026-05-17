@@ -10,6 +10,7 @@ import { fetchCategory, updateCategory } from './api';
 const initialForm = {
     name: '',
     slug: '',
+    show_homepage: false,
 };
 
 function slugify(value = '') {
@@ -54,6 +55,7 @@ export default function EditCategory() {
                     setForm({
                         name: data?.name || '',
                         slug: data?.slug || '',
+                        show_homepage: Boolean(data?.show_homepage),
                     });
                     setIsSlugDirty(false);
                 }
@@ -76,19 +78,20 @@ export default function EditCategory() {
     }, [id]);
 
     const handleChange = (event) => {
-        const { name, value } = event.target;
+        const { name, type, value, checked } = event.target;
+        const fieldValue = type === 'checkbox' ? checked : value;
 
         if (name === 'name') {
             setForm((previous) => ({
                 ...previous,
-                name: value,
-                slug: isSlugDirty ? previous.slug : slugify(value),
+                name: fieldValue,
+                slug: isSlugDirty ? previous.slug : slugify(fieldValue),
             }));
         } else if (name === 'slug') {
             setIsSlugDirty(true);
-            setForm((previous) => ({ ...previous, slug: value }));
+            setForm((previous) => ({ ...previous, slug: fieldValue }));
         } else {
-            setForm((previous) => ({ ...previous, [name]: value }));
+            setForm((previous) => ({ ...previous, [name]: fieldValue }));
         }
 
         setErrors((previous) => {
@@ -134,6 +137,7 @@ export default function EditCategory() {
             await updateCategory(id, {
                 name: form.name.trim(),
                 slug: form.slug.trim(),
+                show_homepage: Boolean(form.show_homepage),
             });
 
             toast.success('Category updated successfully.', {

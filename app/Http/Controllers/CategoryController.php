@@ -21,7 +21,9 @@ class CategoryController extends Controller
         $validated =$request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:categories,slug'],
+            'show_homepage' => ['nullable', 'boolean'],
         ]);
+        $validated['show_homepage'] = $request->boolean('show_homepage');
         $category =Category::query()->create($validated);
         return response()->json($category,201);
     }
@@ -36,7 +38,9 @@ class CategoryController extends Controller
         $validated =$request->validate([
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['required', 'string', 'max:255', 'unique:categories,slug,' . $category->id],
+            'show_homepage' => ['nullable', 'boolean'],
         ]);
+        $validated['show_homepage'] = $request->boolean('show_homepage');
         $category->update($validated);
         return response()->json($category);
     }
