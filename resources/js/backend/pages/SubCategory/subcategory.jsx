@@ -13,41 +13,39 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import CategoryTable from '@/components/category/table';
+import SubCategoryTable from '@/components/subcategory/table';
 
 
-import { deleteCategory, fetchCategories } from './api';
+import { deleteSubCategory, fetchSubCategories } from './api';
 
-export default function Categories() {
+export default function SubCategories() {
     const navigate = useNavigate();
     const { setPageTitle } = useAppContext();
-    const [categories, setCategories] = useState([]);
+    const [subCategories, setSubCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState('');
     const [deletingId, setDeletingId] = useState(null);
-    const [categoryToDelete, setCategoryToDelete] = useState(null);
+    const [subCategoryToDelete, setSubCategoryToDelete] = useState(null);
 
     useEffect(() => {
-        setPageTitle('Categories');
+        setPageTitle('SubCategories');
     }, [setPageTitle]);
 
     useEffect(() => {
         let ignore = false;
 
-        async function loadCategories() {
+        async function loadSubCategories() {
             setIsLoading(true);
             setErrorMessage('');
 
             try {
-                const data = await fetchCategories();
+                const data = await fetchSubCategories();
                 if (!ignore) {
-                    setCategories(Array.isArray(data) ? data : []);
-                    
+                    setSubCategories(Array.isArray(data) ? data : []);
                 }
             } catch (error) {
                 if (!ignore) {
-                    
-                    setErrorMessage(error.message || 'Failed to load categories.');
+                    setErrorMessage(error.message || 'Failed to load subcategories.');
                 }
             } finally {
                 if (!ignore) {
@@ -56,7 +54,7 @@ export default function Categories() {
             }
         }
 
-        loadCategories();
+        loadSubCategories();
 
         return () => {
             ignore = true;
@@ -64,23 +62,23 @@ export default function Categories() {
     }, []);
 
     const handleConfirmDelete = async () => {
-        if (!categoryToDelete) {
+        if (!subCategoryToDelete) {
             return;
         }
 
-        const id = categoryToDelete.id;
+        const id = subCategoryToDelete.id;
         setDeletingId(id);
         setErrorMessage('');
 
         try {
-            await deleteCategory(id);
-            setCategories((previous) => previous.filter((c) => c.id !== id));
-            toast.success('Category deleted successfully.', {
+            await deleteSubCategory(id);
+            setSubCategories((previous) => previous.filter((c) => c.id !== id));
+            toast.success('SubCategory deleted successfully.', {
                 style: { color: '#16a34a' },
             });
-            setCategoryToDelete(null);
+            setSubCategoryToDelete(null);
         } catch (error) {
-            const message = error.message || 'Failed to delete category.';
+            const message = error.message || 'Failed to delete subcategory.';
             setErrorMessage(message);
             toast.error(message, {
                 style: { color: '#dc2626' },
@@ -96,25 +94,25 @@ export default function Categories() {
                 {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
 
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-1">
-                    <CategoryTable
-                        categories={categories}
+                    <SubCategoryTable
+                        subCategories={subCategories}
                         isLoading={isLoading}
                         deletingId={deletingId}
-                        onAdd={() => navigate('/admin/category/add')}
-                        onEdit={(id) => navigate(`/admin/category/${id}/edit`)}
-                        onRequestDelete={setCategoryToDelete}
+                        onAdd={() => navigate('/admin/sub-category/add')}
+                        onEdit={(id) => navigate(`/admin/sub-category/${id}/edit`)}
+                        onRequestDelete={setSubCategoryToDelete}
                     />
                 </div>
 
                 <AlertDialog
-                    open={Boolean(categoryToDelete)}
-                    onOpenChange={(open) => !open && setCategoryToDelete(null)}
+                    open={Boolean(subCategoryToDelete)}
+                    onOpenChange={(open) => !open && setSubCategoryToDelete(null)}
                 >
                     <AlertDialogContent>
                         <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                            <AlertDialogTitle>Delete SubCategory</AlertDialogTitle>
                             <AlertDialogDescription>
-                                Are you sure you want to delete <strong>{categoryToDelete?.name}</strong>? This action cannot be undone.
+                                Are you sure you want to delete <strong>{subCategoryToDelete?.name}</strong>? This action cannot be undone.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>

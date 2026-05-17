@@ -38,6 +38,7 @@ function buildCategoryFormData(data = {}, asUpdate = false) {
 
     formData.append('name', data.name || '');
     formData.append('slug', data.slug || '');
+    formData.append('category_id', data.category_id || '');
 
   
 
@@ -48,47 +49,40 @@ function buildCategoryFormData(data = {}, asUpdate = false) {
     return formData;
 }
 
-export async function fetchCategories(){
-    const payload = await requestJson('/api/categories');
-    if (Array.isArray(payload)) {
-        return payload;
-    }
-    // console.log('[Category] Fetched payload:', payload);
-    if (Array.isArray(payload?.data)) {
-        return payload.data;
-    }
-    console.warn('[Category] Unexpected payload structure:', payload);
-    if (Array.isArray(payload?.categories)) {
-        return payload.categories;
-    }
-    console.warn('[Category] Still no categories array found in payload:', payload);
-    return [];
+export async function fetchSubCategories(){
+    const payload = await requestJson('/api/sub-categories');
+    return Array.isArray(payload)?payload:[];
 }
 
-export async function fetchCategory(id){
-    const payload =await requestJson(`/api/categories/${id}`);
+export async function fetchSubCategory(id){
+    const payload =await requestJson(`/api/sub-categories/${id}`);
     return payload || null;
 }
 
-export async function createCategory(data){
+export async function createSubCategory(data){
     await ensureCsrfCookie();
-    return requestJson('/api/categories',{
+    return requestJson('/api/sub-categories',{
         method:'POST',
         body: buildCategoryFormData(data),
     })
 }
 
-export async function updateCategory(id,data){
+export async function updateSubCategory(id,data){
     await ensureCsrfCookie();
-    return requestJson(`/api/categories/${id}`,{
+    return requestJson(`/api/sub-categories/${id}`,{
         method:'POST',
         body: buildCategoryFormData(data,true)
     });
 }
 
-export async function deleteCategory(id){
+export async function deleteSubCategory(id){
     await ensureCsrfCookie();
-    return requestJson(`/api/categories/${id}`,{
+    return requestJson(`/api/sub-categories/${id}`,{
         method:'DELETE'
     });
+}
+
+export async function fetchCategoriesForDropdown() {
+    const payload = await requestJson('/api/categories');
+    return Array.isArray(payload) ? payload : [];
 }

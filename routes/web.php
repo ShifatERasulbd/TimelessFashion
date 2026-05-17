@@ -5,6 +5,8 @@ use App\Http\Controllers\HeroController;
 use App\Http\Controllers\PersonalizationController;
 use App\Http\Controllers\FeaturesController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\SubCategoryController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -27,6 +29,10 @@ Route::prefix('api')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         
 
+        Route::get('/user', function (Request $request) {
+            return response()->json($request->user());
+        });
+
         Route::post('/logout', [AuthController::class, 'logout']);
         // personalization controller
         Route::get('/personalizations', [PersonalizationController::class, 'index']);
@@ -42,6 +48,9 @@ Route::prefix('api')->group(function () {
 
         // Category Controller
         Route::apiResource('/categories', CategoryController::class);
+
+        // SubCategory Controller
+        Route::apiResource('/sub-categories', SubCategoryController::class);
        
         
 

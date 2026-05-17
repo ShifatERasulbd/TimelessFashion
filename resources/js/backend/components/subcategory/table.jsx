@@ -12,8 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
-export default function CategoryTable({
-    categories = [],
+export default function SubCategoryTable({
+    subCategories = [],
     onAdd,
     onEdit,
     onRequestDelete,
@@ -22,16 +22,12 @@ export default function CategoryTable({
 }) {
     const [search, setSearch] = useState('');
 
-    const filtered = categories.filter((c) => {
-        const q = search.trim().toLowerCase();
-
-        if (!q) {
-            return true;
-        }
-
+    const filtered = subCategories.filter((c) => {
+        const q = search.toLowerCase();
         return (
             c.name?.toLowerCase().includes(q) ||
-            c.slug?.toLowerCase().includes(q)
+            c.slug?.toLowerCase().includes(q)||
+            c.category?.name?.toLowerCase().includes(q)
         );
     });
 
@@ -41,7 +37,7 @@ export default function CategoryTable({
                 <div className="relative min-w-0 w-full md:max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder="Search categories..."
+                        placeholder="Search Subcategory..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="w-full pl-9"
@@ -49,13 +45,13 @@ export default function CategoryTable({
                 </div>
                 <Button className="gap-2 w-full md:w-auto" onClick={onAdd}>
                     <Plus />
-                    Add Category
+                    Add SubCategory
                 </Button>
             </div>
 
             <Card className="w-full overflow-hidden border border-border/80 shadow-sm">
                 <div className="border-b bg-muted/20 px-4 py-3">
-                    <p className="text-sm font-medium">Category List</p>
+                    <p className="text-sm font-medium">SubCategory List</p>
                    
                 </div>
 
@@ -66,6 +62,7 @@ export default function CategoryTable({
                             <TableHead className="w-[100px]">SL No</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Slug</TableHead>
+                            <TableHead>Category</TableHead>
                            
                             <TableHead className="text-right">Action</TableHead>
                         </TableRow>
@@ -74,42 +71,42 @@ export default function CategoryTable({
                         {isLoading && (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                    Loading categories...
+                                    Loading SubCategory...
                                 </TableCell>
                             </TableRow>
                         )}
 
-                        {!isLoading && categories.length === 0 && (
+                        {!isLoading && subCategories.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                    No categories found.
+                                    No subcategories found.
                                 </TableCell>
                             </TableRow>
                         )}
 
-                        {!isLoading && filtered.length === 0 && categories.length > 0 && (
+                        {!isLoading && filtered.length === 0 && subCategories.length > 0 && (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                                    No categories match your search.
+                                    No subcategories match your search.
                                 </TableCell>
                             </TableRow>
                         )}
 
                         {!isLoading &&
-                            filtered.map((category, index) => (
-                                <TableRow key={category.id} className="hover:bg-muted/20">
+                            filtered.map((subcategory, index) => (
+                                <TableRow key={subcategory.id} className="hover:bg-muted/20">
                                     <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
-                                    <TableCell className="font-medium">{category.name}</TableCell>
-                                    <TableCell className="max-w-[380px] truncate">{category.slug}</TableCell>
-                                   
+                                    <TableCell className="font-medium">{subcategory.name}</TableCell>
+                                    <TableCell className="max-w-[380px] truncate">{subcategory.slug}</TableCell>
+                                    <TableCell className="font-medium">{subcategory.category?.name || '-'}</TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-8 w-8"
-                                                aria-label={`Edit ${category.name}`}
-                                                onClick={() => onEdit?.(category.id)}
+                                                aria-label={`Edit ${subcategory.name}`}
+                                                onClick={() => onEdit?.(subcategory.id)}
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
@@ -117,9 +114,9 @@ export default function CategoryTable({
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-8 w-8"
-                                                aria-label={`Delete ${category.name}`}
-                                                onClick={() => onRequestDelete?.(category)}
-                                                disabled={deletingId === category.id}
+                                                aria-label={`Delete ${subcategory.name}`}
+                                                onClick={() => onRequestDelete?.(subcategory)}
+                                                disabled={deletingId === subcategory.id}
                                             >
                                                 <Trash2 className="h-4 w-4 text-destructive" />
                                             </Button>

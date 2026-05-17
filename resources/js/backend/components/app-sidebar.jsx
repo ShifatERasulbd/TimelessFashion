@@ -32,6 +32,7 @@ const websiteItems = [
     { title: 'Hero', icon: Sparkles, path: '/admin/hero' },
     { title: 'Features', icon: Blocks, path: '/admin/features' },
     { title: 'Categories', icon: LayoutList, path: '/admin/category' },
+    { title: 'SubCategories', icon: LayoutList, path: '/admin/sub-category' },
     { title: 'Personalization Orders', icon: Palette, path: '/admin/personalization/orders' },
 ]
 

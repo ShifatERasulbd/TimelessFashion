@@ -51,6 +51,11 @@ const Categories = lazyWithRetry(() => import('@/pages/Category/category'), 'cat
 const AddCategory = lazyWithRetry(() => import('@/pages/Category/addCategory'), 'add-category');
 const EditCategory = lazyWithRetry(() => import('@/pages/Category/editCategory'), 'edit-category');
 
+// SubCategory Management
+const SubCategories = lazyWithRetry(() => import('@/pages/SubCategory/subcategory'), 'sub-categories');
+const AddSubCategory = lazyWithRetry(() => import('@/pages/SubCategory/addSubCategory'), 'add-sub-category');
+const EditSubCategory = lazyWithRetry(() => import('@/pages/SubCategory/editSubCategory'), 'edit-sub-category');
+
 
 
 export default function App() {
@@ -89,6 +94,11 @@ export default function App() {
                             <Route path="category" element={<Categories />} />
                             <Route path="category/add" element={<AddCategory />} />
                             <Route path="category/:id/edit" element={<EditCategory />} />
+
+                            {/* SubCategory Management */}
+                            <Route path="sub-category" element={<SubCategories />} />
+                            <Route path="sub-category/add" element={<AddSubCategory />} />
+                            <Route path="sub-category/:id/edit" element={<EditSubCategory />} />
 
                         </Route>
 

@@ -2,14 +2,15 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
-import AddForm from '@/components/category/addForm';
+import AddForm from '@/components/subcategory/addForm';
 import { useAppContext } from '@/context/AppContext';
 
-import { createCategory } from './api';
-    
+import { createSubCategory, fetchCategoriesForDropdown } from './api';
+
 const initialForm = {
     name: '',
     slug: '',
+    category_id: '',
     
 };
 
@@ -25,8 +26,6 @@ function slugify(value = '') {
         .replace(/-+/g, '-');
 }
 
-
-
 function validateForm(form) {
     const errors = {};
 
@@ -38,22 +37,49 @@ function validateForm(form) {
         errors.slug = ['The slug field is required.'];
     }
 
+    if (!form.category_id.trim()) {
+        errors.category_id = ['The category field is required.'];
+    }
+
     return errors;
 }
 
-export default function AddCategory() {
+export default function AddSubCategory() {
     const navigate = useNavigate();
     const { setPageTitle } = useAppContext();
-
-    const [form, setForm] = useState(initialForm);
     const [isSlugDirty, setIsSlugDirty] = useState(false);
+    const [form, setForm] = useState(initialForm);
+    const [categories, setCategories] = useState([]);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [requestError, setRequestError] = useState('');
 
     useEffect(() => {
-        setPageTitle('Add Category');
+        setPageTitle('Add SubCategory');
     }, [setPageTitle]);
+
+    useEffect(() => {
+        let ignore = false;
+
+        async function loadCategories() {
+            try {
+                const data = await fetchCategoriesForDropdown();
+                if (!ignore) {
+                    setCategories(Array.isArray(data) ? data : []);
+                }
+            } catch (_) {
+                if (!ignore) {
+                    setCategories([]);
+                }
+            }
+        }
+
+        loadCategories();
+
+        return () => {
+            ignore = true;
+        };
+    }, []);
 
     const handleChange = (event) => {
         const { name, value } = event.target;
@@ -72,23 +98,9 @@ export default function AddCategory() {
         }
 
         setErrors((previous) => {
-            if (name === 'name' && !previous.name && !previous.slug) {
-                return previous;
-            }
-
-            if (name !== 'name' && !previous[name]) {
-                return previous;
-            }
-
+            if (!previous[name]) return previous;
             const next = { ...previous };
-
-            if (name === 'name') {
-                delete next.name;
-                delete next.slug;
-            } else {
-                delete next[name];
-            }
-
+            delete next[name];
             return next;
         });
     };
@@ -108,19 +120,20 @@ export default function AddCategory() {
         setRequestError('');
 
         try {
-            await createCategory({
+            await createSubCategory({
                 name: form.name.trim(),
                 slug: form.slug.trim(),
+                category_id: form.category_id.trim(),
             });
 
-            toast.success('Category created successfully.', {
+            toast.success('SubCategory created successfully.', {
                 style: { color: '#16a34a' },
             });
-            navigate('/admin/category');
+            navigate('/admin/sub-category');
         } catch (error) {
             setErrors(error.payload?.errors || {});
             if (!error.payload?.errors) {
-                const message = error.message || 'Failed to create category.';
+                const message = error.message || 'Failed to create subcategory.';
                 setRequestError(message);
                 toast.error(message, { style: { color: '#dc2626' } });
             }
@@ -135,9 +148,10 @@ export default function AddCategory() {
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-1">
                 <AddForm
                     form={form}
+                    categories={categories}
                     onChange={handleChange}
                     onSubmit={handleSubmit}
-                    onCancel={() => navigate('/admin/category')}
+                    onCancel={() => navigate('/admin/sub-category')}
                     isSubmitting={isSubmitting}
                     errors={errors}
                 />
