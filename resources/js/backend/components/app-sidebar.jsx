@@ -39,6 +39,7 @@ const websiteItems = [
 
 const inventoryItems = [
     { title: 'API Products', icon: Package, path: '/admin/api-products' },
+    { title: 'Products', icon: Package, path: '/admin/products' },
 ];
 
 
@@ -90,7 +91,7 @@ export function AppSidebar(props) {
             <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
                 <div className="flex items-center gap-2 px-1">
                     <span className="inline-flex size-4 rounded-full border border-sidebar-foreground/60" />
-                    <span className="text-sm font-semibold">AVANT</span>
+                    <span className="text-sm font-semibold">Timeless</span>
                 </div>
             </SidebarHeader>
 

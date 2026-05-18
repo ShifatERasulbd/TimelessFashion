@@ -65,7 +65,7 @@ class SyncInventoryProducts extends Command
             return self::SUCCESS;
         }
 
-        $bysku = [];
+        $byName = [];
         foreach ($stocks as $row) {
             if (! is_array($row)) {
                 continue;
@@ -87,7 +87,14 @@ class SyncInventoryProducts extends Command
 
             $stock = (int) ($row['stocks'] ?? $row['available_stock'] ?? 0);
 
-            if (! isset($bysku[$sku]) || $stock > $bysku[$sku]['stock']) {
+            $name = $row['product_name'] ?? $row['product']['name'] ?? $sku;
+            $key = strtolower(trim((string) $name));
+
+            if ($key === '') {
+                continue;
+            }
+
+            if (! isset($byName[$key]) || $stock > $byName[$key]['stock']) {
                 $coverImage = $row['cover_image_url'] ?? null;
                 if ($coverImage && ! str_starts_with($coverImage, 'http')) {
                     $coverImage = $baseUrl . '/' . ltrim($coverImage, '/');
@@ -95,8 +102,8 @@ class SyncInventoryProducts extends Command
 
                 $timestamp = now()->toDateTimeString();
 
-                $bysku[$sku] = [
-                    'name' => $row['product_name'] ?? $row['product']['name'] ?? $sku,
+                $byName[$key] = [
+                    'name' => $name,
                     'sku' => $sku,
                     'description' => null,
                     'price' => 0,
@@ -108,13 +115,20 @@ class SyncInventoryProducts extends Command
             }
         }
 
-        $rows = array_values($bysku);
+        $rows = array_values($byName);
 
-        Product::query()->upsert(
-            $rows,
-            ['sku'],
-            ['name', 'cover_image', 'stock', 'updated_at'],
-        );
+        foreach ($rows as $row) {
+            Product::query()->updateOrCreate(
+                ['name' => $row['name']],
+                [
+                    'sku' => $row['sku'],
+                    'description' => $row['description'],
+                    'price' => $row['price'],
+                    'cover_image' => $row['cover_image'],
+                    'stock' => $row['stock'],
+                ],
+            );
+        }
 
         $this->info('Products synced successfully.');
         $this->line('Synced rows: ' . count($rows));

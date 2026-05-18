@@ -24,12 +24,14 @@ class ApiProductController extends Controller
                 'id'           => $product->id,
                 'name'         => $product->name,
                 'sku'          => $product->sku,
-                'description'  => $product->description,
-                'price'        => $product->price,
-                'cover_image'  => $product->cover_image,
-                'stock'        => $product->stock,
-                'created_at'   => $product->created_at,
-                'updated_at'   => $product->updated_at,
+                    'color'        => $product->color,
+                    'size'         => $product->size,
+                    'description'  => $product->description,
+                    'price'        => $product->price,
+                    'cover_image'  => $product->cover_image,
+                    'stock'        => $product->stock,
+                    'created_at'   => $product->created_at,
+                    'updated_at'   => $product->updated_at,
             ]);
 
         return response()->json($products);
@@ -82,7 +84,7 @@ class ApiProductController extends Controller
         }
 
 
-        // Deduplicate by name, size, color — keep highest stock per group
+        // Deduplicate by product name and keep the row with highest stock.
         $byKey = [];
         foreach ($stocks as $row) {
             if (! is_array($row)) {
@@ -99,7 +101,7 @@ class ApiProductController extends Controller
             if (! $name) {
                 continue;
             }
-            $key = strtolower(trim($name)) . '|' . strtolower(trim((string)$size)) . '|' . strtolower(trim((string)$color));
+            $key = strtolower(trim($name));
             $stock = (int) ($row['stocks'] ?? $row['available_stock'] ?? 0);
 
             if (! isset($byKey[$key]) || $stock > $byKey[$key]['stock']) {
@@ -124,15 +126,24 @@ class ApiProductController extends Controller
 
         $rows = array_values($byKey);
 
-        // Upsert: insert or update on name, size, color match
-        Product::query()->upsert(
-            $rows,
-            ['name', 'size', 'color'],
-            ['sku', 'cover_image', 'stock', 'updated_at'],
-        );
+        foreach ($rows as $row) {
+            Product::query()->updateOrCreate(
+                ['name' => $row['name']],
+                [
+                    'sku' => $row['sku'],
+                    'size' => $row['size'],
+                    'color' => $row['color'],
+                    'description' => $row['description'],
+                    'price' => $row['price'],
+                    'cover_image' => $row['cover_image'],
+                    'stock' => $row['stock'],
+                ],
+            );
+        }
 
         return response()->json([
-            'message' => 'Products synced successfully.',
+            'message' => 'Products fetched successfully.',
+            'products' => $rows,
             'synced'  => count($rows),
         ]);
     }

@@ -102,7 +102,6 @@ export default function ApiProducts() {
         );
     });
 
-
     return (
         <div className="space-y-5">
             <div className="flex items-center justify-between gap-2">
@@ -132,6 +131,8 @@ export default function ApiProducts() {
                             <TableHead className="w-[60px]">Image</TableHead>
                             <TableHead>Product Name</TableHead>
                             <TableHead>SKU</TableHead>
+                            <TableHead>Color</TableHead>
+                            <TableHead>Size</TableHead>
                             <TableHead className="text-right">Stock</TableHead>
                             <TableHead className="text-right">Price</TableHead>
                             <TableHead>Last Updated</TableHead>
@@ -140,7 +141,7 @@ export default function ApiProducts() {
                     <TableBody>
                         {isLoading && (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                                <TableCell colSpan={9} className="text-center text-muted-foreground">
                                     Loading products...
                                 </TableCell>
                             </TableRow>
@@ -148,7 +149,7 @@ export default function ApiProducts() {
 
                         {!isLoading && filtered.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                                <TableCell colSpan={9} className="text-center text-muted-foreground">
                                     {products.length === 0
                                         ? 'No products found yet. Products are imported automatically every 10 minutes.'
                                         : 'No products match your search.'}
@@ -173,6 +174,8 @@ export default function ApiProducts() {
                                 </TableCell>
                                 <TableCell>{product.name}</TableCell>
                                 <TableCell className="font-mono text-xs">{product.sku}</TableCell>
+                                <TableCell>{product.color || '-'}</TableCell>
+                                <TableCell>{product.size || '-'}</TableCell>
                                 <TableCell className="text-right">{product.stock}</TableCell>
                                 <TableCell className="text-right">
                                     {Number(product.price) > 0 ? `$${Number(product.price).toFixed(2)}` : '-'}
@@ -186,5 +189,4 @@ export default function ApiProducts() {
                 </Table>
             </Card>
         </div>
-    );
-}
+    )};

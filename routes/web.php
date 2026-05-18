@@ -61,7 +61,12 @@ Route::prefix('api')->group(function () {
         Route::get('/api-products', [ApiProductController::class, 'index']);
         Route::post('/api-products/sync', [ApiProductController::class, 'sync']);
        
-        
+        // Product Controller (CRUD)
+        Route::get('/products', [\App\Http\Controllers\ProductController::class, 'index']);
+        Route::get('/products/{product}', [\App\Http\Controllers\ProductController::class, 'show']);
+        Route::post('/products', [\App\Http\Controllers\ProductController::class, 'store']);
+        Route::put('/products/{product}', [\App\Http\Controllers\ProductController::class, 'update']);
+        Route::delete('/products/{product}', [\App\Http\Controllers\ProductController::class, 'destroy']);
 
     });
 });

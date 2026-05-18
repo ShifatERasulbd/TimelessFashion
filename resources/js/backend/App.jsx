@@ -59,6 +59,11 @@ const EditSubCategory = lazyWithRetry(() => import('@/pages/SubCategory/editSubC
 // API Products
 const ApiProducts = lazyWithRetry(() => import('@/pages/ApiProducts/apiProducts'), 'api-products');
 
+// Product Management
+const Products = lazyWithRetry(() => import('@/pages/Product/products'), 'products');
+const AddProduct = lazyWithRetry(() => import('@/pages/Product/addProduct'), 'add-product');
+const EditProduct = lazyWithRetry(() => import('@/pages/Product/editProduct'), 'edit-product');
+
 
 
 export default function App() {
@@ -102,6 +107,12 @@ export default function App() {
                             <Route path="sub-category" element={<SubCategories />} />
                             <Route path="sub-category/add" element={<AddSubCategory />} />
                             <Route path="sub-category/:id/edit" element={<EditSubCategory />} />
+
+
+                            {/* Product Management */}
+                            <Route path="products" element={<Products />} />
+                            <Route path="products/add" element={<AddProduct />} />
+                            <Route path="products/:id/edit" element={<EditProduct />} />
 
                             {/* API Products */}
                             <Route path="api-products" element={<ApiProducts />} />

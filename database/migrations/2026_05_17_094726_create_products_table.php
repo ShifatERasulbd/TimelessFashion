@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->string('sku')->unique();
+            $table->string('color')->nullable();
+            $table->string('size')->nullable();
             $table->string('description')->nullable();
             $table->decimal('price', 10, 2);
             $table->string('cover_image')->nullable();
