@@ -12,7 +12,7 @@ class ApiProductController extends Controller
     public function index(): JsonResponse
     {
         $products = Product::query()
-            ->where('sku', 'NOT LIKE', 'test%')
+           
             ->whereIn('id', function ($query) {
                 $query->selectRaw('MAX(id)')
                     ->from('products')
@@ -24,6 +24,8 @@ class ApiProductController extends Controller
                 'id'           => $product->id,
                 'name'         => $product->name,
                 'sku'          => $product->sku,
+                'available_products' => $product->available_products,
+                'barcode'      => $product->barcode,
                     'color'        => $product->color,
                     'size'         => $product->size,
                     'description'  => $product->description,
@@ -94,10 +96,21 @@ class ApiProductController extends Controller
             $name = $row['product_name'] ?? $row['product']['name'] ?? null;
             $size = $row['size'] ?? ($row['product']['size'] ?? null);
             $color = $row['color'] ?? ($row['product']['color'] ?? null);
-            $sku = $row['barcode'] ?? ($row['sku'] ?? null);
-            if (is_array($sku)) {
-                $sku = implode('-', array_filter($sku, 'is_scalar')) ?: null;
+            $rawBarcode = $row['barcode'] ?? null;
+            if (is_array($rawBarcode)) {
+                $rawBarcode = implode('-', array_filter($rawBarcode, 'is_scalar')) ?: null;
             }
+            $barcode = is_string($rawBarcode) && trim($rawBarcode) !== ''
+                ? trim($rawBarcode)
+                : null;
+
+            $price = (float) ($row['selling_price'] ?? $row['price'] ?? 0);
+            $availableProductsPayload = [
+                'product_name' => $name,
+                'price' => $price,
+                'barcode' => $barcode,
+            ];
+            $available_products = json_encode($availableProductsPayload, JSON_UNESCAPED_SLASHES);
             if (! $name) {
                 continue;
             }
@@ -113,9 +126,10 @@ class ApiProductController extends Controller
                     'name'        => $name,
                     'size'        => $size,
                     'color'       => $color,
-                    'sku'         => $sku,
+                    'available_products' => $available_products,
+                    'barcode'     => $barcode,
                     'description' => null,
-                    'price'       => 0,
+                    'price'       => $price,
                     'cover_image' => $coverImage,
                     'stock'       => $stock,
                     'updated_at'  => now()->toDateTimeString(),
@@ -130,7 +144,8 @@ class ApiProductController extends Controller
             Product::query()->updateOrCreate(
                 ['name' => $row['name']],
                 [
-                    'sku' => $row['sku'],
+                    'available_products' => $row['available_products'],
+                    'barcode' => $row['barcode'],
                     'size' => $row['size'],
                     'color' => $row['color'],
                     'description' => $row['description'],

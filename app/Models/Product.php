@@ -12,9 +12,13 @@ class Product extends Model
     protected $fillable = [
         'name',
         'sku',
+        'available_products',
+        'barcode',
         'color',
         'size',
         'description',
+        'long_description',
+        'additional_information',
         'price',
         'cover_image',
         'category_id',
@@ -25,6 +29,7 @@ class Product extends Model
     protected function casts(): array
     {
         return [
+            'available_products' => 'array',
             'price' => 'decimal:2',
             'stock' => 'integer',
         ];

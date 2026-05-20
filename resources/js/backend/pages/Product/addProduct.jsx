@@ -13,6 +13,8 @@ const initialForm = {
     color: '',
     size: '',
     description: '',
+    long_description: '',
+    additional_information: '',
     price: '',
     cover_image: '',
     category_id: '',

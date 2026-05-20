@@ -40,6 +40,8 @@ function buildProductPayload(data = {}) {
         color: data.color?.trim() || '',
         size: data.size?.trim() || '',
         description: data.description?.trim() || '',
+        long_description: data.long_description || '',
+        additional_information: data.additional_information || '',
         cover_image: data.cover_image?.trim() || '',
         category_id: data.category_id ? Number(data.category_id) : null,
         subcategory_id: data.subcategory_id ? Number(data.subcategory_id) : null,

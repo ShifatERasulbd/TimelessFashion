@@ -75,7 +75,8 @@ class SyncInventoryProducts extends Command
             if (is_array($rawBarcode)) {
                 $rawBarcode = implode('-', array_filter($rawBarcode, 'is_scalar')) ?: null;
             }
-            $sku = is_string($rawBarcode) && $rawBarcode !== '' ? (string) $rawBarcode : null;
+            $barcode = is_string($rawBarcode) && trim($rawBarcode) !== '' ? trim($rawBarcode) : null;
+            $sku = $barcode;
 
             if (! $sku) {
                 $rawProductId = $row['product_id'] ?? null;
@@ -86,6 +87,7 @@ class SyncInventoryProducts extends Command
             }
 
             $stock = (int) ($row['stocks'] ?? $row['available_stock'] ?? 0);
+            $price = (float) ($row['selling_price'] ?? $row['price'] ?? 0);
 
             $name = $row['product_name'] ?? $row['product']['name'] ?? $sku;
             $key = strtolower(trim((string) $name));
@@ -105,8 +107,14 @@ class SyncInventoryProducts extends Command
                 $byName[$key] = [
                     'name' => $name,
                     'sku' => $sku,
+                    'available_products' => [
+                        'product_name' => $name,
+                        'price' => $price,
+                        'barcode' => $barcode,
+                    ],
+                    'barcode' => $barcode,
                     'description' => null,
-                    'price' => 0,
+                    'price' => $price,
                     'cover_image' => $coverImage,
                     'stock' => $stock,
                     'updated_at' => $timestamp,
@@ -122,6 +130,8 @@ class SyncInventoryProducts extends Command
                 ['name' => $row['name']],
                 [
                     'sku' => $row['sku'],
+                    'available_products' => $row['available_products'],
+                    'barcode' => $row['barcode'],
                     'description' => $row['description'],
                     'price' => $row['price'],
                     'cover_image' => $row['cover_image'],

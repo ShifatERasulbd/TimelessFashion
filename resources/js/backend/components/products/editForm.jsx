@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import RichTextEditor from './richTextEditor';
 
 export default function EditForm({
     form = {},
@@ -68,7 +69,7 @@ export default function EditForm({
                                 <textarea
                                     id="product-description"
                                     name="description"
-                                    rows={6}
+                                    rows={3}
                                     value={form.description || ''}
                                     onChange={onChange}
                                     placeholder="Short product description"
@@ -76,6 +77,22 @@ export default function EditForm({
                                 />
                                 {errors.description && <p className="text-xs text-destructive">{errors.description[0]}</p>}
                             </div>
+
+                            <RichTextEditor
+                                label="Long Description"
+                                value={form.long_description || ''}
+                                onChange={(html) => onChange({ target: { name: 'long_description', value: html } })}
+                                placeholder="Detailed product description with formatting"
+                                error={errors.long_description}
+                            />
+
+                            <RichTextEditor
+                                label="Additional Information"
+                                value={form.additional_information || ''}
+                                onChange={(html) => onChange({ target: { name: 'additional_information', value: html } })}
+                                placeholder="Additional details, specifications, care instructions, etc."
+                                error={errors.additional_information}
+                            />
 
                             <div className="space-y-2">
                                 <Label htmlFor="product-cover-image">Cover Image URL</Label>

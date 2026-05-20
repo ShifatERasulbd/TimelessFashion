@@ -54,6 +54,8 @@ class ProductController extends Controller
             'color' => 'nullable|string|max:255',
             'size' => 'nullable|string|max:255',
             'description' => 'nullable|string',
+            'long_description' => 'nullable|string',
+            'additional_information' => 'nullable|string',
             'price' => 'required|numeric',
             'cover_image' => 'nullable|string',
             'category_id' => 'nullable|integer',

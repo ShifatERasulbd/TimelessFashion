@@ -74,6 +74,9 @@ export function LowStockAlertTable() {
                         <TableHead className="w-[60px]">Image</TableHead>
                         <TableHead>Product</TableHead>
                         <TableHead>SKU</TableHead>
+                        <TableHead>Color Variant</TableHead>
+                        <TableHead>Size Variant</TableHead>
+                        <TableHead className="text-right">Price</TableHead>
                         <TableHead>Warehouse</TableHead>
                         <TableHead className="text-right">Quantity</TableHead>
                     </TableRow>
@@ -81,7 +84,7 @@ export function LowStockAlertTable() {
                 <TableBody>
                     {loading && (
                         <TableRow>
-                            <TableCell colSpan={6} className="text-center text-muted-foreground">
+                            <TableCell colSpan={9} className="text-center text-muted-foreground">
                                 Loading stock data...
                             </TableCell>
                         </TableRow>
@@ -89,7 +92,7 @@ export function LowStockAlertTable() {
 
                     {!loading && stocks.length === 0 && (
                         <TableRow>
-                            <TableCell colSpan={6} className="text-center text-muted-foreground">
+                            <TableCell colSpan={9} className="text-center text-muted-foreground">
                                 No stock data found for Canada warehouse.
                             </TableCell>
                         </TableRow>
@@ -104,10 +107,30 @@ export function LowStockAlertTable() {
                                     : <span className="text-muted-foreground">-</span>
                                 }
                             </TableCell>
-                            <TableCell>{stock.product_name || stock.product?.name || '-'}</TableCell>
-                            <TableCell>{ stock.product?.sku || '-'}</TableCell>
-                            <TableCell>{stock.warehouse_name || stock.warehouse?.name || '-'}</TableCell>
-                            <TableCell className="text-right">{stock.stocks ?? stock.quantity ?? 0}</TableCell>
+                            <TableCell>{stock.product_name || '-'}</TableCell>
+                            <TableCell>{stock.sku || '-'}</TableCell>
+                            <TableCell>
+                                {stock.color_variant?.name ? (
+                                    <div className="flex items-center gap-2">
+                                        {stock.color_variant.color_code && (
+                                            <div 
+                                                className="w-4 h-4 rounded border border-gray-300" 
+                                                style={{ backgroundColor: stock.color_variant.color_code }}
+                                                title={stock.color_variant.name}
+                                            />
+                                        )}
+                                        <span>{stock.color_variant.name}</span>
+                                    </div>
+                                ) : '-'}
+                            </TableCell>
+                            <TableCell>{stock.size_variant?.size || '-'}</TableCell>
+                            <TableCell className="text-right">
+                                {Number.isFinite(Number(stock.selling_price))
+                                    ? Number(stock.selling_price).toFixed(2)
+                                    : '-'}
+                            </TableCell>
+                            <TableCell>{stock.warehouse_name || '-'}</TableCell>
+                            <TableCell className="text-right">{stock.stocks ?? 0}</TableCell>
                         </TableRow>
                     ))}
                 </TableBody>
