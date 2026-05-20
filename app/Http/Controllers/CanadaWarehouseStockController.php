@@ -2,67 +2,71 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Product;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Http;
 
 class CanadaWarehouseStockController extends Controller
 {
     public function index(): JsonResponse
     {
-        $baseUrl = rtrim((string) config('services.inventory.base_url'), '/');
-        $apiKey = (string) config('services.inventory.canada_api_key');
-        $warehouseId = (int) config('services.inventory.canada_warehouse_id');
-        $verifySsl = filter_var(config('services.inventory.verify_ssl', true), FILTER_VALIDATE_BOOL);
-        $caBundlePath = trim((string) config('services.inventory.ca_bundle_path', ''));
+        $rows = Product::query()
+            ->orderBy('name')
+            ->orderBy('size')
+            ->orderBy('color')
+            ->orderBy('sku')
+            ->get()
+            ->map(fn (Product $product): array => $this->formatWarehouseStockRow($product))
+            ->values();
 
-        if ($baseUrl === '' || $apiKey === '' || $warehouseId <= 0) {
-            return response()->json([
-                'message' => 'Inventory API configuration is missing.',
-            ], 500);
+        return response()->json([
+            'data' => $rows,
+            'message' => 'Canada warehouse stock loaded from local database.',
+        ]);
+    }
+
+    private function formatWarehouseStockRow(Product $product): array
+    {
+        $color = $product->color ? trim((string) $product->color) : null;
+        $size = $product->size ? trim((string) $product->size) : null;
+
+        return [
+            'id' => $product->id,
+            'product_id' => $product->id,
+            'product_name' => $product->name,
+            'sku' => $product->sku,
+            'cover_image_url' => $product->cover_image,
+            'color_variant' => $color ? [
+                'name' => $color,
+                'color_code' => $this->resolveColorCode($color),
+            ] : null,
+            'size_variant' => $size ? ['size' => $size] : null,
+            'selling_price' => $product->price,
+            'warehouse_name' => config('services.inventory.canada_warehouse_name', 'Canada Warehouse'),
+            'stocks' => $product->stock,
+        ];
+    }
+
+    private function resolveColorCode(?string $color): ?string
+    {
+        if ($color === null) {
+            return null;
         }
 
-        $httpOptions = [
-            'verify' => $caBundlePath !== '' ? $caBundlePath : $verifySsl,
+        $map = [
+            'black' => '#111827',
+            'blue' => '#2563eb',
+            'brown' => '#92400e',
+            'gray' => '#6b7280',
+            'green' => '#16a34a',
+            'navy' => '#1d4ed8',
+            'orange' => '#ea580c',
+            'pink' => '#ec4899',
+            'purple' => '#7c3aed',
+            'red' => '#dc2626',
+            'white' => '#f9fafb',
+            'yellow' => '#eab308',
         ];
 
-        try {
-            $response = Http::timeout(15)
-                ->withOptions($httpOptions)
-                ->acceptJson()
-                ->withHeaders([
-                    'X-API-Key' => $apiKey,
-                ])
-                ->get($baseUrl.'/api/public/stocks', [
-                    'warehouse_id' => $warehouseId,
-                ]);
-        } catch (ConnectionException $exception) {
-            $message = $exception->getMessage();
-
-            if (str_contains($message, 'cURL error 60')) {
-                return response()->json([
-                    'message' => 'SSL certificate validation failed while connecting to Inventory API. Set INVENTORY_API_VERIFY_SSL=false for local testing, or configure INVENTORY_API_CA_BUNDLE_PATH with a valid CA bundle.',
-                ], 502);
-            }
-
-            return response()->json([
-                'message' => 'Failed to connect to Inventory API.',
-            ], 502);
-        }
-
-        if (! $response->successful()) {
-            $upstreamPayload = $response->json();
-
-            return response()->json([
-                'message' => is_array($upstreamPayload)
-                    ? ($upstreamPayload['message'] ?? 'Failed to fetch stock data from Inventory API.')
-                    : 'Failed to fetch stock data from Inventory API.',
-                'status' => $response->status(),
-            ], $response->status());
-        }
-
-        $payload = $response->json();
-
-        return response()->json(is_array($payload) ? $payload : []);
+        return $map[strtolower($color)] ?? null;
     }
 }

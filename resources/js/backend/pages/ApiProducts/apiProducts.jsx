@@ -132,7 +132,6 @@ export default function ApiProducts() {
                             <TableHead className="w-[60px]">Image</TableHead>
                             <TableHead>Product Name</TableHead>
                             <TableHead>SKU</TableHead>
-                            <TableHead>Barcode</TableHead>
                             <TableHead>Color</TableHead>
                             <TableHead>Size</TableHead>
                             <TableHead className="text-right">Stock</TableHead>
@@ -176,7 +175,6 @@ export default function ApiProducts() {
                                 </TableCell>
                                 <TableCell>{product.name}</TableCell>
                                 <TableCell className="font-mono text-xs">{product.sku}</TableCell>
-                                <TableCell className="font-mono text-xs">{product.barcode || '-'}</TableCell>
                                 <TableCell>{product.color || '-'}</TableCell>
                                 <TableCell>{product.size || '-'}</TableCell>
                                 <TableCell className="text-right">{product.stock}</TableCell>
