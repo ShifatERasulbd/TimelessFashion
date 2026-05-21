@@ -11,6 +11,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 
+function resolveMediaUrl(value, fallbackDirectory) {
+    if (!value) {
+        return null;
+    }
+
+    const raw = String(value);
+
+    if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:')) {
+        return raw;
+    }
+
+    const normalized = raw.replace(/^\/+/, '');
+
+    if (normalized.startsWith('uploads/')) {
+        return `/${normalized}`;
+    }
+
+    if (normalized.includes('/')) {
+        return `/${normalized}`;
+    }
+
+    return `${fallbackDirectory}/${normalized}`;
+}
+
 export default function AddForm({
     form = {},
     onChange,
@@ -24,6 +48,15 @@ export default function AddForm({
     submitLabel = 'Create Hero',
     submittingLabel = 'Saving...',
 }) {
+    const currentImageSrc = resolveMediaUrl(
+        hero?.image_url || hero?.image,
+        '/uploads/heroes/images'
+    );
+    const currentVideoSrc = resolveMediaUrl(
+        hero?.video_url || hero?.video,
+        '/uploads/heroes/videos'
+    );
+
     return (
         <Card>
             <CardHeader>
@@ -93,15 +126,22 @@ export default function AddForm({
                                     />
                                 </div>
                             )}
-                            {hero?.image_url && !previews?.image && (
-                                <a
-                                    href={hero.image_url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-xs text-blue-600 underline"
-                                >
-                                    View current image
-                                </a>
+                            {currentImageSrc && !previews?.image && (
+                                <div className="mt-3 space-y-2">
+                                    <img
+                                        src={currentImageSrc}
+                                        alt="Current image"
+                                        className="h-64 w-full object-contain rounded border bg-muted"
+                                    />
+                                    <a
+                                        href={currentImageSrc}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-xs text-blue-600 underline"
+                                    >
+                                        View current image
+                                    </a>
+                                </div>
                             )}
                             {errors.image && (
                                 <p className="text-xs text-destructive">{errors.image[0]}</p>
@@ -130,9 +170,9 @@ export default function AddForm({
                                     />
                                 </div>
                             )}
-                            {hero?.video_url && !previews?.video && (
+                            {currentVideoSrc && !previews?.video && (
                                 <a
-                                    href={hero.video_url}
+                                    href={currentVideoSrc}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="text-xs text-blue-600 underline"

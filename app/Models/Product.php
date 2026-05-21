@@ -30,6 +30,8 @@ class Product extends Model
     {
         return [
             'available_products' => 'array',
+            'color' => 'array',
+            'size' => 'array',
             'price' => 'decimal:2',
             'stock' => 'integer',
         ];

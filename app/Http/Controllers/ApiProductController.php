@@ -70,7 +70,7 @@ class ApiProductController extends Controller
         }
 
 
-        $bySku = [];
+        $byName = [];
         foreach ($stocks as $row) {
             if (! is_array($row)) {
                 continue;
@@ -89,9 +89,9 @@ class ApiProductController extends Controller
             if ($name === '') {
                 continue;
             }
-            $size = $this->normalizeVariantValue($row['size'] ?? ($row['product']['size'] ?? null));
-            $color = $this->normalizeVariantValue($row['color'] ?? ($row['product']['color'] ?? null));
-            $sku = $this->buildVariantSku($barcode, $row['product_id'] ?? null, $name, $size, $color);
+            $size = $this->normalizeVariantValue($row['size_variant']['size'] ?? ($row['size'] ?? ($row['product']['size'] ?? null)));
+            $color = $this->normalizeVariantValue($row['color_variant']['name'] ?? ($row['color'] ?? ($row['product']['color'] ?? null)));
+            $sku = \Illuminate\Support\Str::slug($name) ?: ('inv-' . md5($name));
             $stock = (int) ($row['stocks'] ?? $row['available_stock'] ?? 0);
 
             $coverImage = $row['cover_image_url'] ?? null;
@@ -99,30 +99,77 @@ class ApiProductController extends Controller
                 $coverImage = $baseUrl . '/' . ltrim($coverImage, '/');
             }
 
-            $bySku[$sku] = [
-                'name' => $name,
-                'sku' => $sku,
-                'size' => $size,
-                'color' => $color,
+            if (! isset($byName[$name])) {
+                $byName[$name] = [
+                    'sku' => $sku,
+                    'name' => $name,
+                    'price' => $price,
+                    'stock' => 0,
+                    'cover_image' => $coverImage,
+                    'barcodes' => [],
+                    'colors' => [],
+                    'sizes' => [],
+                    'product_ids' => [],
+                ];
+            }
+
+            $byName[$name]['stock'] += max(0, $stock);
+
+            if ($price > 0) {
+                $byName[$name]['price'] = max($byName[$name]['price'], $price);
+            }
+
+            if (! $byName[$name]['cover_image'] && $coverImage) {
+                $byName[$name]['cover_image'] = $coverImage;
+            }
+
+            if ($barcode !== null) {
+                $byName[$name]['barcodes'][] = $barcode;
+            }
+
+            if ($color !== null) {
+                $byName[$name]['colors'][] = $color;
+            }
+
+            if ($size !== null) {
+                $byName[$name]['sizes'][] = $size;
+            }
+
+            if (! empty($row['product_id'])) {
+                $byName[$name]['product_ids'][] = $row['product_id'];
+            }
+        }
+
+        $rows = [];
+        foreach ($byName as $item) {
+            $colors = array_values(array_unique(array_filter($item['colors'])));
+            $sizes = array_values(array_unique(array_filter($item['sizes'])));
+            $barcodes = array_values(array_unique(array_filter($item['barcodes'])));
+            $productIds = array_values(array_unique(array_filter($item['product_ids'])));
+
+            $rows[] = [
+                'name' => $item['name'],
+                'sku' => $item['sku'],
+                'size' => json_encode($sizes, JSON_UNESCAPED_SLASHES),
+                'color' => json_encode($colors, JSON_UNESCAPED_SLASHES),
                 'available_products' => [
-                    'product_name' => $name,
-                    'product_id' => $row['product_id'] ?? null,
-                    'barcode' => $barcode,
-                    'size' => $size,
-                    'color' => $color,
+                    'product_name' => $item['name'],
+                    'product_ids' => $productIds,
+                    'barcodes' => $barcodes,
+                    'colors' => $colors,
+                    'sizes' => $sizes,
                     'warehouse_name' => config('services.inventory.canada_warehouse_name', 'Canada Warehouse'),
+                    'variant_count' => max(count($colors), count($sizes), count($barcodes), 1),
                 ],
-                'barcode' => $barcode,
+                'barcode' => $barcodes[0] ?? null,
                 'description' => null,
-                'price' => $price,
-                'cover_image' => $coverImage,
-                'stock' => $stock,
+                'price' => $item['price'],
+                'cover_image' => $item['cover_image'],
+                'stock' => $item['stock'],
                 'updated_at' => now()->toDateTimeString(),
                 'created_at' => now()->toDateTimeString(),
             ];
         }
-
-        $rows = array_values($bySku);
 
         foreach ($rows as $row) {
             Product::query()->updateOrCreate(
@@ -148,22 +195,11 @@ class ApiProductController extends Controller
         ]);
     }
 
-    private function buildVariantSku(?string $sku, mixed $productId, string $name, ?string $size, ?string $color): string
+    private function buildProductSku(mixed $productId, string $name): string
     {
-        $baseSku = trim((string) $sku);
+        $baseSku = $productId ? 'INV-'.$productId : Str::slug($name);
 
-        if ($baseSku !== '') {
-            return substr($baseSku, 0, 191);
-        }
-
-        $variantBits = array_filter([
-            $productId ? 'INV-'.$productId : null,
-            $size ? Str::slug($size) : null,
-            $color ? Str::slug($color) : null,
-            Str::slug($name),
-        ]);
-
-        return substr(implode('-', $variantBits) ?: uniqid('inv-', true), 0, 191);
+        return substr($baseSku !== '' ? $baseSku : uniqid('inv-', true), 0, 191);
     }
 
     private function normalizeVariantValue(mixed $value): ?string
@@ -179,8 +215,8 @@ class ApiProductController extends Controller
 
     private function formatProduct(Product $product): array
     {
-        $color = $product->color ? trim((string) $product->color) : null;
-        $size = $product->size ? trim((string) $product->size) : null;
+        $color = $this->decodeJsonList($product->color);
+        $size = $this->decodeJsonList($product->size);
         $warehouseName = config('services.inventory.canada_warehouse_name', 'Canada Warehouse');
 
         return [
@@ -192,12 +228,9 @@ class ApiProductController extends Controller
             'available_products' => $product->available_products,
             'barcode' => $product->barcode,
             'color' => $color,
-            'color_variant' => $color ? [
-                'name' => $color,
-                'color_code' => $this->resolveColorCode($color),
-            ] : null,
+            'color_variant' => $this->buildPrimaryColorVariant($color),
             'size' => $size,
-            'size_variant' => $size ? ['size' => $size] : null,
+            'size_variant' => $this->buildPrimarySizeVariant($size),
             'description' => $product->description,
             'price' => $product->price,
             'selling_price' => $product->price,
@@ -210,6 +243,63 @@ class ApiProductController extends Controller
             'created_at' => $product->created_at,
             'updated_at' => $product->updated_at,
         ];
+    }
+
+    private function decodeJsonList(mixed $value): array|string|null
+    {
+        if (is_array($value)) {
+            return array_values(array_filter($value, fn ($item) => is_scalar($item) && trim((string) $item) !== ''));
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $decoded = json_decode($trimmed, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return array_values(array_filter($decoded, fn ($item) => is_scalar($item) && trim((string) $item) !== ''));
+        }
+
+        return $trimmed;
+    }
+
+    private function buildPrimaryColorVariant(array|string|null $color): ?array
+    {
+        if (! is_array($color) || empty($color)) {
+            return is_string($color) && $color !== '' ? [
+                'name' => $color,
+                'color_code' => $this->resolveColorCode($color),
+            ] : null;
+        }
+
+        $first = $color[0] ?? null;
+        if (! is_string($first) || $first === '') {
+            return null;
+        }
+
+        return [
+            'name' => $first,
+            'color_code' => $this->resolveColorCode($first),
+        ];
+    }
+
+    private function buildPrimarySizeVariant(array|string|null $size): ?array
+    {
+        if (! is_array($size) || empty($size)) {
+            return is_string($size) && $size !== '' ? ['size' => $size] : null;
+        }
+
+        $first = $size[0] ?? null;
+        if (! is_string($first) || $first === '') {
+            return null;
+        }
+
+        return ['size' => $first];
     }
 
     private function resolveColorCode(?string $color): ?string

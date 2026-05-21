@@ -82,6 +82,8 @@ export async function updateHero(id, data) {
 }
 
 export async function deleteHero(id) {
+
+    
     await ensureCsrfCookie();
 
     return requestJson(`/api/heroes/${id}`, {

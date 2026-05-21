@@ -107,46 +107,63 @@ class SyncInventoryProducts extends Command
                 continue;
             }
 
-            $size = $this->normalizeVariantValue($row['size'] ?? ($row['product']['size'] ?? null));
-            $color = $this->normalizeVariantValue($row['color'] ?? ($row['product']['color'] ?? null));
-            $variantSku = $this->buildVariantSku($sku, $row['product_id'] ?? null, $name, $size, $color);
+            $size = $this->normalizeVariantValue($row['size_variant']['size'] ?? ($row['size'] ?? ($row['product']['size'] ?? null)));
+            $color = $this->normalizeVariantValue($row['color_variant']['name'] ?? ($row['color'] ?? ($row['product']['color'] ?? null)));
+            $groupKey = strtolower($name);
+            $groupSku = Str::slug($name) ?: ('inv-' . md5($name));
 
             $coverImage = $row['cover_image_url'] ?? null;
             if ($coverImage && ! str_starts_with($coverImage, 'http')) {
                 $coverImage = $baseUrl . '/' . ltrim($coverImage, '/');
             }
 
-            $colorVariant = null;
-            if ($color !== null) {
-                $colorVariant = [
-                    'name' => $color,
-                    'color_code' => $this->resolveColorCode($color),
+            if (! isset($rowsToSync[$groupKey])) {
+                $rowsToSync[$groupKey] = [
+                    'sku' => $groupSku,
+                    'name' => $name,
+                    'price' => $price,
+                    'stock' => 0,
+                    'image' => $coverImage,
+                    'barcodes' => [],
+                    'colors' => [],
+                    'sizes' => [],
+                    'product_ids' => [],
                 ];
             }
 
-            $rowsToSync[$variantSku] = [
-                'sku' => $variantSku,
-                'name' => $name,
-                'price' => $price,
-                'stock' => $stock,
-                'image' => $coverImage,
-                'color' => $color,
-                'size' => $size,
-                'barcode' => $barcode,
-                'product_id' => $row['product_id'] ?? null,
-                'available_products' => [
-                    'product_name' => $name,
-                    'product_id' => $row['product_id'] ?? null,
-                    'barcode' => $barcode,
-                    'size' => $size,
-                    'color' => $color,
-                    'warehouse_name' => config('services.inventory.canada_warehouse_name', 'Canada Warehouse'),
-                ],
-                'color_variant' => $colorVariant,
-            ];
+            $rowsToSync[$groupKey]['stock'] += max(0, $stock);
+
+            if ($price > 0) {
+                $rowsToSync[$groupKey]['price'] = max($rowsToSync[$groupKey]['price'], $price);
+            }
+
+            if (! $rowsToSync[$groupKey]['image'] && $coverImage) {
+                $rowsToSync[$groupKey]['image'] = $coverImage;
+            }
+
+            if ($barcode !== null) {
+                $rowsToSync[$groupKey]['barcodes'][] = $barcode;
+            }
+
+            if ($color !== null) {
+                $rowsToSync[$groupKey]['colors'][] = $color;
+            }
+
+            if ($size !== null) {
+                $rowsToSync[$groupKey]['sizes'][] = $size;
+            }
+
+            if (! empty($row['product_id'])) {
+                $rowsToSync[$groupKey]['product_ids'][] = $row['product_id'];
+            }
         }
 
         foreach ($rowsToSync as $item) {
+            $colors = array_values(array_unique(array_filter($item['colors'])));
+            $sizes = array_values(array_unique(array_filter($item['sizes'])));
+            $barcodes = array_values(array_unique(array_filter($item['barcodes'])));
+            $productIds = array_values(array_unique(array_filter($item['product_ids'])));
+
             Product::updateOrCreate(
                 ['sku' => $item['sku']],
                 [
@@ -154,12 +171,29 @@ class SyncInventoryProducts extends Command
                     'price' => $item['price'],
                     'stock' => $item['stock'],
                     'cover_image' => $item['image'],
-                    'color' => $item['color'],
-                    'size' => $item['size'],
-                    'barcode' => $item['barcode'],
-                    'available_products' => $item['available_products'],
+                    'color' => json_encode($colors, JSON_UNESCAPED_SLASHES),
+                    'size' => json_encode($sizes, JSON_UNESCAPED_SLASHES),
+                    'barcode' => $barcodes[0] ?? null,
+                    'available_products' => [
+                        'product_name' => $item['name'],
+                        'product_ids' => $productIds,
+                        'barcodes' => $barcodes,
+                        'colors' => $colors,
+                        'sizes' => $sizes,
+                        'warehouse_name' => config('services.inventory.canada_warehouse_name', 'Canada Warehouse'),
+                        'variant_count' => max(count($colors), count($sizes), count($barcodes), 1),
+                    ],
                 ]
             );
+        }
+
+        // Remove products that are no longer in the sync set (stale rows from old syncs)
+        $syncedSkus = array_values(array_map(fn (array $item): string => $item['sku'], $rowsToSync));
+        if (! empty($syncedSkus)) {
+            $pruned = Product::whereNotIn('sku', $syncedSkus)->delete();
+            if ($pruned > 0) {
+                $this->info("Pruned {$pruned} stale product(s) from local database.");
+            }
         }
 
         $this->info('Successfully synced ' . count($rowsToSync) . ' products from Inventory API.');
@@ -167,22 +201,11 @@ class SyncInventoryProducts extends Command
         return self::SUCCESS;
     }
 
-    private function buildVariantSku(?string $sku, mixed $productId, string $name, ?string $size, ?string $color): string
+    private function buildProductSku(mixed $productId, string $name): string
     {
-        $baseSku = trim((string) $sku);
+        $baseSku = $productId ? 'INV-'.$productId : Str::slug($name);
 
-        if ($baseSku !== '') {
-            return substr($baseSku, 0, 191);
-        }
-
-        $variantBits = array_filter([
-            $productId ? 'INV-'.$productId : null,
-            $size ? Str::slug($size) : null,
-            $color ? Str::slug($color) : null,
-            Str::slug($name),
-        ]);
-
-        return substr(implode('-', $variantBits) ?: uniqid('inv-', true), 0, 191);
+        return substr($baseSku !== '' ? $baseSku : uniqid('inv-', true), 0, 191);
     }
 
     private function normalizeVariantValue(mixed $value): ?string

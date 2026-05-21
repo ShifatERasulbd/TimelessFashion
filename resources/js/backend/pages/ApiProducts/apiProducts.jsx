@@ -59,6 +59,27 @@ export default function ApiProducts() {
         });
     }
 
+    function formatJsonList(value) {
+        if (Array.isArray(value)) {
+            return value.filter(Boolean).join(', ');
+        }
+
+        if (typeof value === 'string' && value.trim()) {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    return parsed.filter(Boolean).join(', ');
+                }
+            } catch {
+                return value;
+            }
+
+            return value;
+        }
+
+        return '-';
+    }
+
     const loadProducts = async () => {
         setIsLoading(true);
         setError('');
@@ -175,8 +196,8 @@ export default function ApiProducts() {
                                 </TableCell>
                                 <TableCell>{product.name}</TableCell>
                                 <TableCell className="font-mono text-xs">{product.sku}</TableCell>
-                                <TableCell>{product.color || '-'}</TableCell>
-                                <TableCell>{product.size || '-'}</TableCell>
+                                <TableCell>{formatJsonList(product.color)}</TableCell>
+                                <TableCell>{formatJsonList(product.size)}</TableCell>
                                 <TableCell className="text-right">{product.stock}</TableCell>
                                 <TableCell className="text-right">
                                     {Number(product.price) > 0 ? `$${Number(product.price).toFixed(2)}` : '-'}

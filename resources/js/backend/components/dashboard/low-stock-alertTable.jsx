@@ -61,6 +61,27 @@ export function LowStockAlertTable() {
         };
     }, []);
 
+    function formatJsonList(value) {
+        if (Array.isArray(value)) {
+            return value.filter(Boolean).join(', ');
+        }
+
+        if (typeof value === 'string' && value.trim()) {
+            try {
+                const parsed = JSON.parse(value);
+                if (Array.isArray(parsed)) {
+                    return parsed.filter(Boolean).join(', ');
+                }
+            } catch {
+                return value;
+            }
+
+            return value;
+        }
+
+        return '-';
+    }
+
     return (
         <Card className="p-4">
             <h3 className="mb-3 font-semibold">Canada Warehouse Stock</h3>
@@ -110,20 +131,20 @@ export function LowStockAlertTable() {
                             <TableCell>{stock.product_name || '-'}</TableCell>
                             <TableCell>{stock.sku || '-'}</TableCell>
                             <TableCell>
-                                {stock.color_variant?.name ? (
+                                {formatJsonList(stock.color ?? stock.color_variant?.name) !== '-' ? (
                                     <div className="flex items-center gap-2">
-                                        {stock.color_variant.color_code && (
+                                        {stock.color_variant?.color_code && (
                                             <div 
                                                 className="w-4 h-4 rounded border border-gray-300" 
                                                 style={{ backgroundColor: stock.color_variant.color_code }}
-                                                title={stock.color_variant.name}
+                                                title={formatJsonList(stock.color)}
                                             />
                                         )}
-                                        <span>{stock.color_variant.name}</span>
+                                        <span>{formatJsonList(stock.color ?? stock.color_variant?.name)}</span>
                                     </div>
                                 ) : '-'}
                             </TableCell>
-                            <TableCell>{stock.size_variant?.size || '-'}</TableCell>
+                            <TableCell>{formatJsonList(stock.size ?? stock.size_variant?.size)}</TableCell>
                             <TableCell className="text-right">
                                 {Number.isFinite(Number(stock.selling_price))
                                     ? Number(stock.selling_price).toFixed(2)

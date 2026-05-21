@@ -11,8 +11,6 @@ class CanadaWarehouseStockController extends Controller
     {
         $rows = Product::query()
             ->orderBy('name')
-            ->orderBy('size')
-            ->orderBy('color')
             ->orderBy('sku')
             ->get()
             ->map(fn (Product $product): array => $this->formatWarehouseStockRow($product))
@@ -26,8 +24,8 @@ class CanadaWarehouseStockController extends Controller
 
     private function formatWarehouseStockRow(Product $product): array
     {
-        $color = $product->color ? trim((string) $product->color) : null;
-        $size = $product->size ? trim((string) $product->size) : null;
+        $color = $this->decodeJsonList($product->color);
+        $size = $this->decodeJsonList($product->size);
 
         return [
             'id' => $product->id,
@@ -35,15 +33,71 @@ class CanadaWarehouseStockController extends Controller
             'product_name' => $product->name,
             'sku' => $product->sku,
             'cover_image_url' => $product->cover_image,
-            'color_variant' => $color ? [
-                'name' => $color,
-                'color_code' => $this->resolveColorCode($color),
-            ] : null,
-            'size_variant' => $size ? ['size' => $size] : null,
+            'color' => $color,
+            'size' => $size,
+            'color_variant' => $this->buildPrimaryColorVariant($color),
+            'size_variant' => $this->buildPrimarySizeVariant($size),
             'selling_price' => $product->price,
             'warehouse_name' => config('services.inventory.canada_warehouse_name', 'Canada Warehouse'),
             'stocks' => $product->stock,
         ];
+    }
+
+    private function decodeJsonList(mixed $value): array|string|null
+    {
+        if (is_array($value)) {
+            return array_values(array_filter($value, fn ($item) => is_scalar($item) && trim((string) $item) !== ''));
+        }
+
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $trimmed = trim($value);
+        if ($trimmed === '') {
+            return null;
+        }
+
+        $decoded = json_decode($trimmed, true);
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return array_values(array_filter($decoded, fn ($item) => is_scalar($item) && trim((string) $item) !== ''));
+        }
+
+        return $trimmed;
+    }
+
+    private function buildPrimaryColorVariant(array|string|null $color): ?array
+    {
+        if (! is_array($color) || empty($color)) {
+            return is_string($color) && $color !== '' ? [
+                'name' => $color,
+                'color_code' => $this->resolveColorCode($color),
+            ] : null;
+        }
+
+        $first = $color[0] ?? null;
+        if (! is_string($first) || $first === '') {
+            return null;
+        }
+
+        return [
+            'name' => $first,
+            'color_code' => $this->resolveColorCode($first),
+        ];
+    }
+
+    private function buildPrimarySizeVariant(array|string|null $size): ?array
+    {
+        if (! is_array($size) || empty($size)) {
+            return is_string($size) && $size !== '' ? ['size' => $size] : null;
+        }
+
+        $first = $size[0] ?? null;
+        if (! is_string($first) || $first === '') {
+            return null;
+        }
+
+        return ['size' => $first];
     }
 
     private function resolveColorCode(?string $color): ?string
