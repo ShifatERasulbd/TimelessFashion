@@ -29,19 +29,35 @@ export const PRODUCT_VIEWS = [
 
 export const DESIGN_AREAS = {
     front: {
-        left: 0.32,
+        left: 0.33,
         top: 0.341,
-        width: 0.39,
+        width: 0.35,
         height: 0.438,
     },
     back: {
          left: 0.32,
         top: 0.341,
-        width: 0.39,
+        width: 0.375,
         height: 0.438,
     },
 };
 
+const DESIGN_GUIDE_AREAS = {
+    front: {
+        left: 0.22,
+        top: 0.22,
+        width: 0.22,
+        height: 0.29,
+    },
+    back: {
+        left: 0.22,
+        top: 0.22,
+        width: 0.22,
+        height: 0.29,
+    },
+};
 
-
+export function getDesignGuideArea(viewId) {
+    return DESIGN_GUIDE_AREAS[viewId] || DESIGN_GUIDE_AREAS.front;
+}
 
