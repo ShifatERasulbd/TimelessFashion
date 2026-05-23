@@ -23,6 +23,29 @@ function getAbsoluteDesignArea(activeArea, canvasWidth, canvasHeight) {
     };
 }
 
+function syncFabricCanvasContainer(canvasElement) {
+    if (!canvasElement) return;
+
+    const container = canvasElement.closest('.canvas-container');
+    if (!container) return;
+
+    container.style.width = '100%';
+    container.style.maxWidth = '100%';
+    container.style.height = 'auto';
+    container.style.aspectRatio = `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`;
+
+    const lowerCanvas = container.querySelector('canvas.lower-canvas') || canvasElement;
+    const upperCanvas = container.querySelector('canvas.upper-canvas');
+
+    [lowerCanvas, upperCanvas].forEach((canvasNode) => {
+        if (!canvasNode) return;
+        canvasNode.style.width = '100%';
+        canvasNode.style.height = '100%';
+        canvasNode.style.maxWidth = '100%';
+        canvasNode.style.display = 'block';
+    });
+}
+
 export default function CanvasStage({
     canvasRef,
     productViews,
@@ -38,7 +61,7 @@ export default function CanvasStage({
         height: CANVAS_HEIGHT,
     });
 
-    const activeDesignArea = getDesignGuideArea(activeView);
+    const activeDesignArea = getDesignGuideArea(activeView, canvasSize.width);
     
     // Compute the absolute pixel bounds dynamically using the translation helper
     const absoluteBounds = getAbsoluteDesignArea(
@@ -52,6 +75,8 @@ export default function CanvasStage({
         const updateCanvasSize = () => {
             if (!wrapperRef.current) return;
 
+            syncFabricCanvasContainer(canvasRef.current);
+
             const rect = wrapperRef.current.getBoundingClientRect();
 
             setCanvasSize({
@@ -62,12 +87,29 @@ export default function CanvasStage({
 
         updateCanvasSize();
 
+        let resizeObserver;
+        if (typeof ResizeObserver !== 'undefined' && wrapperRef.current) {
+            resizeObserver = new ResizeObserver(updateCanvasSize);
+            resizeObserver.observe(wrapperRef.current);
+        }
+
+        let mutationObserver;
+        if (typeof MutationObserver !== 'undefined' && wrapperRef.current) {
+            mutationObserver = new MutationObserver(updateCanvasSize);
+            mutationObserver.observe(wrapperRef.current, {
+                childList: true,
+                subtree: true,
+            });
+        }
+
         window.addEventListener('resize', updateCanvasSize);
 
         return () => {
             window.removeEventListener('resize', updateCanvasSize);
+            resizeObserver?.disconnect();
+            mutationObserver?.disconnect();
         };
-    }, []);
+    }, [canvasRef]);
 
     const handleDragOver = (event) => {
         event.preventDefault();
@@ -135,7 +177,7 @@ export default function CanvasStage({
                             {/* CANVAS */}
                             <canvas
                                 ref={canvasRef}
-                                className="block w-full"
+                                className="block h-auto w-full max-w-full"
                                 style={{
                                     aspectRatio: `${CANVAS_WIDTH} / ${CANVAS_HEIGHT}`,
                                 }}

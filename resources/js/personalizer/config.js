@@ -30,34 +30,85 @@ export const PRODUCT_VIEWS = [
 export const DESIGN_AREAS = {
     front: {
         left: 0.33,
-        top: 0.341,
+        top: 0.35,
         width: 0.35,
         height: 0.438,
     },
     back: {
-         left: 0.32,
-        top: 0.341,
-        width: 0.375,
+        
+        left: 0.33,
+        top: 0.35,
+        width: 0.35,
         height: 0.438,
     },
 };
 
 const DESIGN_GUIDE_AREAS = {
     front: {
-        left: 0.22,
-        top: 0.22,
-        width: 0.22,
-        height: 0.29,
+        left: 0.33,
+        top: 0.35,
+        width: 0.35,
+        height: 0.438,
     },
     back: {
-        left: 0.22,
-        top: 0.22,
-        width: 0.22,
-        height: 0.29,
+         left: 0.33,
+        top: 0.35,
+        width: 0.35,
+        height: 0.438,
     },
 };
 
-export function getDesignGuideArea(viewId) {
-    return DESIGN_GUIDE_AREAS[viewId] || DESIGN_GUIDE_AREAS.front;
+const RESPONSIVE_GUIDE_AREAS = {
+    mobile: {
+        front: {
+            left: 0.33,
+            top: 0.35,
+            width: 0.35,
+            height: 0.438,
+        },
+        back: {
+            left: 0.33,
+            top: 0.35,
+            width: 0.35,
+            height: 0.31,
+        },
+    },
+    tablet: {
+        front: {
+            left: 0.33,
+            top: 0.35,
+            width: 0.35,
+            height: 0.438,
+        },
+        back: {
+            left: 0.33,
+            top: 0.35,
+            width: 0.35,
+            height: 0.438,
+        },
+    },
+    desktop: {
+        front: DESIGN_GUIDE_AREAS.front,
+        back: DESIGN_GUIDE_AREAS.back,
+    },
+};
+
+function getGuideBreakpoint(canvasWidth = CANVAS_WIDTH) {
+    if (canvasWidth <= 420) {
+        return 'mobile';
+    }
+
+    if (canvasWidth <= 700) {
+        return 'tablet';
+    }
+
+    return 'desktop';
+}
+
+export function getDesignGuideArea(viewId, canvasWidth = CANVAS_WIDTH) {
+    const breakpoint = getGuideBreakpoint(canvasWidth);
+    const responsiveSet = RESPONSIVE_GUIDE_AREAS[breakpoint] || RESPONSIVE_GUIDE_AREAS.desktop;
+
+    return responsiveSet[viewId] || responsiveSet.front || DESIGN_GUIDE_AREAS.front;
 }
 

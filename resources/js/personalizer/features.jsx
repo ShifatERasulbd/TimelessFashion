@@ -1352,63 +1352,69 @@ export default function Features() {
                     onShare={handleShare}
                 />
 
-                <div className="grid flex-1 gap-4 xl:grid-cols-[88px_minmax(0,1.45fr)_380px]">
-                    <LeftToolbar
-                        activeTool={activeTool}
-                        canUndo={canUndo}
-                        canRedo={canRedo}
-                        onSelectTool={handleToolbarSelect}
-                    />
+                <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-[88px_minmax(0,1fr)] xl:grid-cols-[88px_minmax(0,1.35fr)_360px]">
+                    <div className="order-1 lg:order-1">
+                        <LeftToolbar
+                            activeTool={activeTool}
+                            canUndo={canUndo}
+                            canRedo={canRedo}
+                            onSelectTool={handleToolbarSelect}
+                        />
+                    </div>
 
-                    <CanvasStage
-                        canvasRef={canvasRef}
-                        productViews={PRODUCT_VIEWS}
-                        activeView={activeView}
-                        onSwitchView={handleSwitchView}
-                        onDropDesign={handleCanvasDropDesign}
-                    />
+                    <div className="order-2 lg:order-2 lg:col-start-2 xl:col-start-2">
+                        <CanvasStage
+                            canvasRef={canvasRef}
+                            productViews={PRODUCT_VIEWS}
+                            activeView={activeView}
+                            onSwitchView={handleSwitchView}
+                            onDropDesign={handleCanvasDropDesign}
+                        />
+                    </div>
 
-                    <CustomizePanel
-                        activeTool={activeTool}
-                        selectedColor={selectedColor}
-                        productColors={PRODUCT_COLORS}
-                        productColor={productColor}
-                        onSelectProductColor={setProductColor}
-                        onOpenUpload={() => fileInputRef.current?.click()}
-                        uploadedDesigns={uploadedDesigns}
-                        selectedDesignId={selectedDesignId}
-                        onClearUploadedDesigns={handleClearUploadedDesigns}
-                        usedDesignIds={usedDesignIds}
-                        onUseUploadedDesign={handleUseUploadedDesign}
-                        onRemoveUploadedDesign={handleRemoveUploadedDesign}
-                        draftText={draftText}
-                        onDraftTextChange={setDraftText}
-                        draftFontFamily={draftFontFamily}
-                        onDraftFontFamilyChange={handleDraftFontFamilyChange}
-                        draftFontSize={draftFontSize}
-                        onDraftFontSizeChange={handleDraftFontSizeChange}
-                        draftTextColor={draftTextColor}
-                        onDraftTextColorChange={handleDraftTextColorChange}
-                        onAddText={handleAddText}
-                        fontOptions={FONT_OPTIONS}
-                        activeImageLayers={activeImageLayers}
-                        activeTextLayers={activeTextLayers}
-                        selectedObjectId={selectedObjectId}
-                        onSelectObject={selectObject}
-                        onUpdateImageLayer={updateImageLayer}
-                        onUpdateTextLayer={updateTextLayer}
-                        onAddShape={addShape}
-                        onBringForward={handleBringForward}
-                        onSendBackward={handleSendBackward}
-                        onDeleteSelected={handleDeleteSelected}
-                        orderQuantity={orderQuantity}
-                        onDecreaseQuantity={() => setOrderQuantity((prev) => Math.max(1, prev - 1))}
-                        onIncreaseQuantity={() => setOrderQuantity((prev) => Math.min(99, prev + 1))}
-                        onDownload={handleDownloadBoth}
-                        onOrderNow={handleOrderNow}
-                        isSaving={isSaving}
-                        savedUrl={savedUrl}
-                    />
+                    <div className="order-3 lg:order-3 lg:col-span-2 xl:col-span-1 xl:col-start-3">
+                        <CustomizePanel
+                            activeTool={activeTool}
+                            selectedColor={selectedColor}
+                            productColors={PRODUCT_COLORS}
+                            productColor={productColor}
+                            onSelectProductColor={setProductColor}
+                            onOpenUpload={() => fileInputRef.current?.click()}
+                            uploadedDesigns={uploadedDesigns}
+                            selectedDesignId={selectedDesignId}
+                            onClearUploadedDesigns={handleClearUploadedDesigns}
+                            usedDesignIds={usedDesignIds}
+                            onUseUploadedDesign={handleUseUploadedDesign}
+                            onRemoveUploadedDesign={handleRemoveUploadedDesign}
+                            draftText={draftText}
+                            onDraftTextChange={setDraftText}
+                            draftFontFamily={draftFontFamily}
+                            onDraftFontFamilyChange={handleDraftFontFamilyChange}
+                            draftFontSize={draftFontSize}
+                            onDraftFontSizeChange={handleDraftFontSizeChange}
+                            draftTextColor={draftTextColor}
+                            onDraftTextColorChange={handleDraftTextColorChange}
+                            onAddText={handleAddText}
+                            fontOptions={FONT_OPTIONS}
+                            activeImageLayers={activeImageLayers}
+                            activeTextLayers={activeTextLayers}
+                            selectedObjectId={selectedObjectId}
+                            onSelectObject={selectObject}
+                            onUpdateImageLayer={updateImageLayer}
+                            onUpdateTextLayer={updateTextLayer}
+                            onAddShape={addShape}
+                            onBringForward={handleBringForward}
+                            onSendBackward={handleSendBackward}
+                            onDeleteSelected={handleDeleteSelected}
+                            orderQuantity={orderQuantity}
+                            onDecreaseQuantity={() => setOrderQuantity((prev) => Math.max(1, prev - 1))}
+                            onIncreaseQuantity={() => setOrderQuantity((prev) => Math.min(99, prev + 1))}
+                            onDownload={handleDownloadBoth}
+                            onOrderNow={handleOrderNow}
+                            isSaving={isSaving}
+                            savedUrl={savedUrl}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
