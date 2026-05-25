@@ -1,8 +1,8 @@
 export const CANVAS_WIDTH = 555;
-export const CANVAS_HEIGHT = 760;
+export const CANVAS_HEIGHT = 422;
 export const PRODUCT_PRICE = '$49.99';
 export const HISTORY_LIMIT = 40;
-export const SERIALIZED_PROPS = ['objectId', 'viewId', 'layerType', 'layerName', 'designId', 'sourceName', 'shapeKind', 'isBaseImage', 'hiddenByUser'];
+export const SERIALIZED_PROPS = ['objectId', 'viewId', 'layerType', 'layerName', 'designId', 'sourceName', 'imageSource', 'shapeKind', 'isBaseImage', 'hiddenByUser', 'curveEnabled', 'curveAmount'];
 
 export const FONT_OPTIONS = ['Bebas Neue', 'Montserrat', 'Oswald', 'Poppins', 'Georgia', 'Arial'];
 
@@ -29,61 +29,61 @@ export const PRODUCT_VIEWS = [
 
 export const DESIGN_AREAS = {
     front: {
-        left: 0.33,
+        left: 0.41,
         top: 0.35,
-        width: 0.35,
+        width: 0.19,
         height: 0.438,
     },
     back: {
         
-        left: 0.33,
+         left: 0.41,
         top: 0.35,
-        width: 0.35,
+        width: 0.19,
         height: 0.438,
     },
 };
 
 const DESIGN_GUIDE_AREAS = {
     front: {
-        left: 0.33,
+        left: 0.41,
         top: 0.35,
-        width: 0.35,
+        width: 0.19,
         height: 0.438,
     },
     back: {
-         left: 0.33,
+         left: 0.41,
         top: 0.35,
-        width: 0.35,
+        width: 0.19,
         height: 0.438,
     },
 };
 
 const RESPONSIVE_GUIDE_AREAS = {
     mobile: {
-        front: {
-            left: 0.33,
+            front: {
+            left: 0.41,
             top: 0.35,
-            width: 0.35,
+            width: 0.19,
             height: 0.438,
         },
         back: {
-            left: 0.33,
+            left: 0.41,
             top: 0.35,
-            width: 0.35,
-            height: 0.31,
+            width: 0.19,
+            height: 0.438,
         },
     },
     tablet: {
         front: {
-            left: 0.33,
+            left: 0.41,
             top: 0.35,
-            width: 0.35,
+            width: 0.19,
             height: 0.438,
         },
         back: {
-            left: 0.33,
+            left: 0.41,
             top: 0.35,
-            width: 0.35,
+            width: 0.19,
             height: 0.438,
         },
     },

@@ -11,10 +11,13 @@ import {
     Check,
     Circle as CircleIcon,
     Download,
+    Images,
     Italic,
     SendToBack,
     ShoppingCart,
+    Star as StarIcon,
     Square,
+    Triangle as TriangleIcon,
     Trash2,
     Type,
     Underline,
@@ -71,14 +74,18 @@ export default function CustomizePanel({
     onDraftFontSizeChange,
     draftTextColor,
     onDraftTextColorChange,
+    draftShapeColor,
+    onDraftShapeColorChange,
     onAddText,
     fontOptions,
     activeImageLayers,
     activeTextLayers,
+    activeShapeLayers,
     selectedObjectId,
     onSelectObject,
     onUpdateImageLayer,
     onUpdateTextLayer,
+    onUpdateShapeLayer,
     onAddShape,
     onBringForward,
     onSendBackward,
@@ -87,6 +94,7 @@ export default function CustomizePanel({
     onDecreaseQuantity,
     onIncreaseQuantity,
     onDownload,
+    onPreviewMockups,
     onOrderNow,
     isSaving,
     savedUrl,
@@ -103,6 +111,8 @@ export default function CustomizePanel({
 
     const imageSizeUnitLabel = imageSizeUnit === 'in' ? 'in' : imageSizeUnit === 'cm' ? 'cm' : 'px';
     const isCollapsed = (section) => collapsedSections[section] === true;
+    const selectedShapeLayer = activeShapeLayers.find((layer) => layer.id === selectedObjectId) || null;
+    const selectedTextLayer = activeTextLayers.find((layer) => layer.id === selectedObjectId) || null;
 
     const toggleSection = (section) => {
         setCollapsedSections((previous) => ({
@@ -360,8 +370,8 @@ export default function CustomizePanel({
                             </Select>
                             <Input
                                 type="number"
-                                min={10}
-                                max={120}
+                                min={6}
+                                max={320}
                                 value={draftFontSize}
                                 onChange={(event) => onDraftFontSizeChange(Number(event.target.value || 24))}
                                 className="h-11 rounded-xl bg-white text-center"
@@ -377,6 +387,84 @@ export default function CustomizePanel({
                             <Type className="size-4" />
                             Add text layer
                         </Button>
+
+                        <div className="space-y-2 rounded-xl border border-zinc-200 bg-white p-3">
+                            <div className="flex items-center justify-between gap-2">
+                                <Label className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">Text curve</Label>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant={selectedTextLayer?.curveEnabled ? 'default' : 'outline'}
+                                    disabled={!selectedTextLayer}
+                                    onClick={() => {
+                                        if (!selectedTextLayer) return;
+
+                                        onUpdateTextLayer(selectedTextLayer.id, {
+                                            curveEnabled: !selectedTextLayer.curveEnabled,
+                                            curveAmount: selectedTextLayer.curveEnabled
+                                                ? 0
+                                                : (selectedTextLayer.curveAmount || 26),
+                                        });
+                                    }}
+                                >
+                                    {selectedTextLayer
+                                        ? (selectedTextLayer.curveEnabled ? 'Curved On' : 'Curved Off')
+                                        : 'Select text'}
+                                </Button>
+                            </div>
+                            <p className="text-xs text-zinc-500">
+                                {selectedTextLayer
+                                    ? 'Use selector handles: left/right changes curve, corners and top/bottom resize text.'
+                                    : 'Select a text layer from canvas or the list below, then enable curved text.'}
+                            </p>
+
+                            <div className="space-y-1">
+                                <div className="flex items-center justify-between text-xs text-zinc-500">
+                                    <span>Text size</span>
+                                    <span>{selectedTextLayer?.fontSize || draftFontSize}</span>
+                                </div>
+                                <Input
+                                    type="range"
+                                    min={6}
+                                    max={320}
+                                    step={1}
+                                    value={selectedTextLayer?.fontSize || draftFontSize}
+                                    disabled={!selectedTextLayer}
+                                    onChange={(event) => {
+                                        if (!selectedTextLayer) return;
+
+                                        onUpdateTextLayer(selectedTextLayer.id, {
+                                            fontSize: Number(event.target.value || 24),
+                                        });
+                                    }}
+                                    className="h-8"
+                                />
+                            </div>
+
+                            <div className="space-y-1">
+                                <div className="flex items-center justify-between text-xs text-zinc-500">
+                                    <span>Curve intensity</span>
+                                    <span>{selectedTextLayer?.curveAmount || 0}</span>
+                                </div>
+                                <Input
+                                    type="range"
+                                    min={-160}
+                                    max={160}
+                                    step={1}
+                                    value={selectedTextLayer?.curveAmount || 0}
+                                    disabled={!selectedTextLayer || !selectedTextLayer.curveEnabled}
+                                    onChange={(event) => {
+                                        if (!selectedTextLayer) return;
+
+                                        onUpdateTextLayer(selectedTextLayer.id, {
+                                            curveAmount: Number(event.target.value || 0),
+                                            curveEnabled: true,
+                                        });
+                                    }}
+                                    className="h-8"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     {activeTextLayers.length > 0 && (
@@ -410,8 +498,8 @@ export default function CustomizePanel({
                                         </Select>
                                         <Input
                                             type="number"
-                                            min={10}
-                                            max={120}
+                                            min={6}
+                                            max={320}
                                             value={layer.fontSize}
                                             onFocus={() => onSelectObject(layer.id)}
                                             onChange={(event) => onUpdateTextLayer(layer.id, { fontSize: Number(event.target.value || 24) })}
@@ -493,15 +581,55 @@ export default function CustomizePanel({
                         </Button>
                     </div>
                     {!isCollapsed('shapes') && (
-                        <div className="grid grid-cols-2 gap-3">
-                            <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('rect')}>
-                                <Square className="size-4" />
-                                Rectangle
-                            </Button>
-                            <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('circle')}>
-                                <CircleIcon className="size-4" />
-                                Circle
-                            </Button>
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-3">
+                                <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('rect')}>
+                                    <Square className="size-4" />
+                                    Rectangle
+                                </Button>
+                                <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('circle')}>
+                                    <CircleIcon className="size-4" />
+                                    Circle
+                                </Button>
+                                <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('triangle')}>
+                                    <TriangleIcon className="size-4" />
+                                    Triangle
+                                </Button>
+                                <Button type="button" variant="outline" className="rounded-2xl" onClick={() => onAddShape('star')}>
+                                    <StarIcon className="size-4" />
+                                    Star
+                                </Button>
+                            </div>
+
+                            <div className="space-y-2 rounded-2xl border border-zinc-200 bg-zinc-50 p-3">
+                                <div className="flex items-center justify-between gap-3">
+                                    <Label htmlFor="shape-color" className="text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
+                                        Shape color
+                                    </Label>
+                                    <Input
+                                        id="shape-color"
+                                        type="color"
+                                        value={draftShapeColor}
+                                        onChange={(event) => onDraftShapeColorChange(event.target.value)}
+                                        className="h-10 w-14 rounded-xl bg-white p-1"
+                                    />
+                                </div>
+                                <p className="text-xs text-zinc-500">
+                                    {selectedShapeLayer
+                                        ? `Editing ${selectedShapeLayer.label}`
+                                        : 'Choose a color, then add a shape or select an existing shape to recolor it.'}
+                                </p>
+                                {selectedShapeLayer && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => onUpdateShapeLayer(selectedShapeLayer.id, { fill: draftShapeColor })}
+                                    >
+                                        Apply to selected shape
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     )}
                 </div>
@@ -575,6 +703,11 @@ export default function CustomizePanel({
                             </Button>
                         </div>
                     </div>
+
+                    <Button type="button" variant="outline" className="h-12 w-full rounded-2xl" onClick={onPreviewMockups} disabled={isSaving}>
+                        <Images className="size-4" />
+                        Preview mockups
+                    </Button>
 
                     <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
                         <Button type="button" variant="outline" className="h-12 rounded-2xl" onClick={onDownload}>
