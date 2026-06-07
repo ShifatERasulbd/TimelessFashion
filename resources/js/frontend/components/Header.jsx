@@ -29,10 +29,7 @@ const shopMegaMenuColumns = [
     },
 ];
 
-const shopMegaMenuImages = [
-    '/uploads/heroes/images/hero1.webp',
-    '/uploads/personalizer/order/order-design-ec8725a6-cb1f-456a-b929-ebf789cc956d.png',
-];
+const shopMegaMenuImage = '/uploads/heroes/images/hero1.webp';
 
 const utilityIcons = [
     { label: 'Account', icon: UserRound, href: '#account' },
@@ -63,7 +60,7 @@ export default function Header() {
                                     {item.label}
                                 </Link>
 
-                                <div className="invisible fixed left-0 right-0 top-[90px] z-50 w-full opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                                <div className="invisible fixed left-0 right-0 top-[90px] z-50 max-h-0 w-full overflow-hidden opacity-0 transition-[max-height,opacity] duration-300 ease-out group-hover:visible group-hover:max-h-[520px] group-hover:opacity-100">
                                     <div className="border border-zinc-200 bg-white px-4 py-8 shadow-[0_18px_60px_rgba(0,0,0,0.08)] sm:px-6 lg:px-10">
                                         <div className="mx-auto grid w-full max-w-[1920px] grid-cols-[1.15fr_1.15fr_1.15fr_1.15fr_1.1fr] gap-8 xl:gap-10">
                                             {shopMegaMenuColumns.map((column) => (
@@ -87,16 +84,13 @@ export default function Header() {
                                             ))}
 
                                             <div className="flex justify-center">
-                                                <figure className="w-full max-w-[240px] text-center">
-                                                    <Link to="/shop" className="flex flex-col gap-3 overflow-hidden bg-zinc-100 p-3">
-                                                        {shopMegaMenuImages.map((image, index) => (
-                                                            <img
-                                                                key={image}
-                                                                src={image}
-                                                                alt={index === 0 ? 'Future Classics New Arrivals' : 'Timeless custom apparel'}
-                                                                className="h-[128px] w-full object-cover object-center"
-                                                            />
-                                                        ))}
+                                                <figure className="w-full max-w-[260px] text-center">
+                                                    <Link to="/shop" className="block overflow-hidden bg-zinc-100 p-3">
+                                                        <img
+                                                            src={shopMegaMenuImage}
+                                                            alt="Future Classics New Arrivals"
+                                                            className="h-[256px] w-full object-cover object-center"
+                                                        />
                                                     </Link>
                                                     <figcaption className="mt-3 text-[0.7rem] uppercase tracking-[0.08em] text-zinc-500">
                                                         Future Classics New Arrivals

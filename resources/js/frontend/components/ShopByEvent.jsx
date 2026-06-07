@@ -52,7 +52,7 @@ function EventCard({ title, image, className, imagePosition }) {
 
 export default function ShopByEvent() {
     return (
-        <section className={`${featuresFontClass} bg-[#f3f3f3] pb-14 pt-6 sm:pb-20 sm:pt-10`}>
+        <section className={`${featuresFontClass} bg-white pb-14 pt-6 sm:pb-20 sm:pt-10`}>
             <div className="mx-auto w-full max-w-[1700px] px-6 sm:px-8 lg:px-12">
                 <div className="mb-7 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-start sm:justify-between">
                     <div>

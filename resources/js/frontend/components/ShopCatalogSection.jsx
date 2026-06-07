@@ -1,9 +1,9 @@
 import { SlidersHorizontal } from 'lucide-react';
 
 import { featuresFontClass } from '../../utils/typography';
+import ShopSidebar from './ShopSidebar.jsx';
 
 const productImage = '/uploads/heroes/images/hero1.webp';
-const displayCategories = ['All', 'Men', 'Women', 'Youth', 'Jackets', 'Shirts', 'Sweaters'];
 
 const products = [
     { id: 1, name: 'Corporate Signature Sweatshirt', price: '$68.00', tag: 'Best Seller', position: 'object-[45%_center]' },
@@ -47,82 +47,20 @@ function ProductCard({ product }) {
     );
 }
 
-function FilterChevron({ open = false }) {
-    return (
-        <svg
-            viewBox="0 0 24 24"
-            className={`size-5 text-zinc-950 transition-transform ${open ? 'rotate-180' : ''}`}
-            aria-hidden="true"
-        >
-            <path
-                d="M6 9l6 6 6-6"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.9"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-            />
-        </svg>
-    );
-}
-
-function SidebarFilterRow({ title, open = false, children }) {
-    return (
-        <div className="border-b border-zinc-200 pb-4">
-            <div className="flex items-center justify-between gap-3">
-                <h2 className="text-[0.82rem] font-semibold uppercase tracking-[0.12em] text-zinc-900">
-                    {title}
-                </h2>
-                <FilterChevron open={open} />
-            </div>
-
-            {children ? <div className="pt-4">{children}</div> : null}
-        </div>
-    );
-}
-
-function ShopSidebar() {
-    return (
-        <aside className="bg-white px-6 py-5 sm:px-8 sm:py-7">
-            
-            <div className="mt-8 space-y-9">
-                <SidebarFilterRow title="Product Categories" open>
-                    <ul className="space-y-2.5 text-[1.05rem] leading-8 text-slate-600 sm:text-[1.08rem]">
-                        {displayCategories.map((item, index) => (
-                            <li key={item}>
-                                <button
-                                    type="button"
-                                    className={`transition-colors hover:text-zinc-950 ${index === 0 ? 'font-medium text-zinc-950' : ''}`}
-                                >
-                                    {item}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                </SidebarFilterRow>
-
-                <SidebarFilterRow title="Filter By Color" />
-
-                <SidebarFilterRow title="Filter By Size" />
-            </div>
-        </aside>
-    );
-}
-
 function ShopProductsGrid() {
     return (
         <div>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3 border border-zinc-200 bg-white p-4">
-                <p className="text-[0.8rem] uppercase tracking-[0.14em] text-zinc-600">
-                    Showing {products.length} Products
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-3  py-4">
+                <p className="text-[0.88rem]  tracking-[0.07em] text-slate-600">
+                    Showing 1-12 of 27 results
                 </p>
 
                 <button
                     type="button"
-                    className="inline-flex items-center gap-2 border border-zinc-300 px-3 py-2 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-zinc-800"
+                    className="inline-flex items-center gap-2 bg-zinc-950 px-3.5 py-2 text-[0.72rem] font-medium uppercase tracking-[0.14em] text-white"
                 >
                     <SlidersHorizontal className="size-4" strokeWidth={1.7} />
-                    Filter & Sort
+                    Sort by
                 </button>
             </div>
 

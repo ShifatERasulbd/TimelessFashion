@@ -5,11 +5,11 @@ import ShopHeroSection from '../components/ShopHeroSection.jsx';
 
 export default function ShopPage() {
     return (
-        <>
+        <div className="bg-white">
             <ShopHeroSection />
             <ShopCatalogSection />
             <NewsletterSection />
             <InstagramSection />
-        </>
+        </div>
     );
 }

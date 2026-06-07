@@ -47,7 +47,7 @@ function CategoryCard({ title, imagePosition, buttonLabel }) {
 
 export default function BestSellingProducts() {
     return (
-        <section className={`${featuresFontClass} bg-[#f3f3f3] py-14 sm:py-20`}>
+        <section className={`${featuresFontClass} bg-white py-14 sm:py-20`}>
             <div className="mx-auto w-full max-w-[1700px] px-6 sm:px-8 lg:px-12">
                 <div className="mb-8 flex flex-col gap-5 sm:mb-10 sm:flex-row sm:items-start sm:justify-between">
                     <div>

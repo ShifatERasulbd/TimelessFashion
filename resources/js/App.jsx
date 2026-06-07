@@ -9,7 +9,7 @@ import ShopPage from './frontend/pages/ShopPage.jsx';
 
 function FrontendLayout() {
     return (
-        <div className="min-h-screen bg-[#f4f2ed] text-zinc-950">
+        <div className="min-h-screen bg-white text-zinc-950">
             <Header />
             <main>
                 <Outlet />

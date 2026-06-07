@@ -9,7 +9,7 @@ const watermarkRows = [
 
 export default function NewsletterSection() {
     return (
-        <section className={`${featuresFontClass} relative overflow-hidden bg-[#efefef] py-16 sm:py-20 lg:py-24`}>
+        <section className={`${featuresFontClass} relative overflow-hidden bg-white py-16 sm:py-20 lg:py-24`}>
             <div className="pointer-events-none absolute inset-0">
                 <div className="flex h-full flex-col justify-between px-2 text-[clamp(2.7rem,8vw,5.6rem)] font-light uppercase leading-none tracking-[0.08em] text-zinc-300/[0.35]">
                     {watermarkRows.map((row, index) => (

@@ -39,7 +39,7 @@ function InstagramCard({ item }) {
 
 export default function InstagramSection() {
     return (
-        <section className={`${featuresFontClass} bg-[#efefef] py-14 sm:py-16 lg:py-20`}>
+        <section className={`${featuresFontClass} bg-white py-14 sm:py-16 lg:py-20`}>
             <div className="mx-auto w-full max-w-[1480px] px-5 sm:px-8 lg:px-12">
                 <h2 className="mb-8 text-center text-[1.2rem] font-medium uppercase tracking-[0.18em] text-zinc-900 sm:mb-10 sm:text-[1.55rem]">
                     Follow Us On Instagram
