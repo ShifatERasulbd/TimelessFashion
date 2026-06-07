@@ -5,6 +5,8 @@ use App\Http\Controllers\HeroController;
 use App\Http\Controllers\PersonalizationController;
 use App\Http\Controllers\FeaturesController;
 use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\CanadaWarehouseStockController;
+use App\Http\Controllers\ApiProductController;
 use App\Http\Controllers\SubCategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -51,8 +53,20 @@ Route::prefix('api')->group(function () {
 
         // SubCategory Controller
         Route::apiResource('/sub-categories', SubCategoryController::class);
+
+        // Inventory public API proxy (Canada warehouse)
+        Route::get('/inventory/canada-warehouse-stocks', [CanadaWarehouseStockController::class, 'index']);
+
+        // API Products (synced from Inventory)
+        Route::get('/api-products', [ApiProductController::class, 'index']);
+        Route::post('/api-products/sync', [ApiProductController::class, 'sync']);
        
-        
+        // Product Controller (CRUD)
+        Route::get('/products', [\App\Http\Controllers\ProductController::class, 'index']);
+        Route::get('/products/{product}', [\App\Http\Controllers\ProductController::class, 'show']);
+        Route::post('/products', [\App\Http\Controllers\ProductController::class, 'store']);
+        Route::put('/products/{product}', [\App\Http\Controllers\ProductController::class, 'update']);
+        Route::delete('/products/{product}', [\App\Http\Controllers\ProductController::class, 'destroy']);
 
     });
 });

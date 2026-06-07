@@ -11,6 +11,11 @@ const initialForm = {
     name: '',
     slug: '',
     category_id: '',
+    image: null,
+};
+
+const initialPreviews = {
+    image: null,
 };
 
 function slugify(value = '') {
@@ -32,7 +37,9 @@ export default function EditSubCategory() {
 
     const [form, setForm] = useState(initialForm);
     const [isSlugDirty, setIsSlugDirty] = useState(false);
+    const [subCategory, setSubCategory] = useState(null);
     const [categories, setCategories] = useState([]);
+    const [previews, setPreviews] = useState(initialPreviews);
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -41,6 +48,14 @@ export default function EditSubCategory() {
     useEffect(() => {
         setPageTitle('Edit SubCategory');
     }, [setPageTitle]);
+
+    useEffect(() => {
+        return () => {
+            if (previews.image) {
+                URL.revokeObjectURL(previews.image);
+            }
+        };
+    }, [previews.image]);
 
     useEffect(() => {
         let ignore = false;
@@ -56,10 +71,12 @@ export default function EditSubCategory() {
                 ]);
 
                 if (!ignore) {
+                    setSubCategory(data || null);
                     setForm({
                         name: data?.name || '',
                         slug: data?.slug || '',
-                        category_id: data?.category_id || '',
+                        category_id: data?.category_id ? String(data.category_id) : '',
+                        image: null,
                     });
                     setIsSlugDirty(false);
                     setCategories(Array.isArray(categoryData) ? categoryData : []);
@@ -120,8 +137,35 @@ export default function EditSubCategory() {
         });
     };
 
+    const handleFileChange = (event) => {
+        const { name, files } = event.target;
+        const file = files && files.length > 0 ? files[0] : null;
+
+        setForm((previous) => ({ ...previous, [name]: file }));
+
+        if (previews[name]) {
+            URL.revokeObjectURL(previews[name]);
+        }
+
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setPreviews((previous) => ({ ...previous, [name]: previewUrl }));
+        } else {
+            setPreviews((previous) => ({ ...previous, [name]: null }));
+        }
+
+        setErrors((previous) => {
+            if (!previous[name]) return previous;
+            const next = { ...previous };
+            delete next[name];
+            return next;
+        });
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
+
+        const categoryId = String(form.category_id || '').trim();
 
         if (!form.name.trim()) {
             setErrors({ name: ['The name field is required.'] });
@@ -133,7 +177,7 @@ export default function EditSubCategory() {
             return;
         }
 
-        if (!form.category_id.trim()) {
+        if (!categoryId) {
             setErrors({ category_id: ['The category field is required.'] });
             return;
         }
@@ -146,7 +190,8 @@ export default function EditSubCategory() {
             await updateSubCategory(id, {
                 name: form.name.trim(),
                 slug: form.slug.trim(),
-                category_id: form.category_id.trim(),
+                category_id: categoryId,
+                image: form.image,
             });
 
             toast.success('SubCategory updated successfully.', {
@@ -175,8 +220,11 @@ export default function EditSubCategory() {
 
             <EditForm
                 form={form}
+                subCategory={subCategory}
                 categories={categories}
+                previews={previews}
                 onChange={handleChange}
+                onFileChange={handleFileChange}
                 onSubmit={handleSubmit}
                 onCancel={() => navigate('/admin/sub-category')}
                 isSubmitting={isSubmitting}

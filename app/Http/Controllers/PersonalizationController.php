@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Personalization;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PersonalizationController extends Controller
@@ -157,20 +156,33 @@ class PersonalizationController extends Controller
         ]);
     }
 
+    public function confirm(Personalization $personalization): JsonResponse
+    {
+        $personalization->update(['order_status' => 'confirmed']);
+
+        return response()->json([
+            'message' => 'Order placed successfully.',
+            'data' => $this->transformRecord($personalization->fresh()),
+        ]);
+    }
+
     public function destroy(Personalization $personalization): JsonResponse
     {
-        if ($personalization->image_path && Storage::disk('public')->exists($personalization->image_path)) {
-            Storage::disk('public')->delete($personalization->image_path);
+        if ($personalization->image_path) {
+            $abs = public_path($personalization->image_path);
+            if (file_exists($abs)) @unlink($abs);
         }
 
         $frontPath = $personalization->front_image_path ?: ($personalization->meta['front_image_path'] ?? null);
-        if ($frontPath && Storage::disk('public')->exists($frontPath)) {
-            Storage::disk('public')->delete($frontPath);
+        if ($frontPath) {
+            $abs = public_path($frontPath);
+            if (file_exists($abs)) @unlink($abs);
         }
 
         $backPath = $personalization->back_image_path ?: ($personalization->meta['back_image_path'] ?? null);
-        if ($backPath && Storage::disk('public')->exists($backPath)) {
-            Storage::disk('public')->delete($backPath);
+        if ($backPath) {
+            $abs = public_path($backPath);
+            if (file_exists($abs)) @unlink($abs);
         }
 
         $personalization->delete();
@@ -195,9 +207,9 @@ class PersonalizationController extends Controller
             'user_id' => $record->user_id,
             'title' => $record->title,
             'image_path' => $record->image_path,
-            'image_url' => Storage::url($record->image_path),
-            'front_image_url' => $frontImagePath ? Storage::url($frontImagePath) : Storage::url($record->image_path),
-            'back_image_url' => $backImagePath ? Storage::url($backImagePath) : null,
+            'image_url' => '/' . $record->image_path,
+            'front_image_url' => $frontImagePath ? '/' . $frontImagePath : '/' . $record->image_path,
+            'back_image_url' => $backImagePath ? '/' . $backImagePath : null,
             'quantity' => (int) $quantity,
             'unit_price' => round($unitPrice, 2),
             'total_price' => round($totalPrice, 2),
@@ -222,9 +234,15 @@ class PersonalizationController extends Controller
         }
 
         $fileName = 'order-design-' . Str::uuid() . '.png';
-        $path = 'personalizations/orders/' . $fileName;
-        Storage::disk('public')->put($path, $binary);
+        $relativePath = 'uploads/personalizer/order/' . $fileName;
+        $absolutePath = public_path($relativePath);
 
-        return $path;
+        if (!is_dir(dirname($absolutePath))) {
+            mkdir(dirname($absolutePath), 0755, true);
+        }
+
+        file_put_contents($absolutePath, $binary);
+
+        return $relativePath;
     }
 }

@@ -40,6 +40,10 @@ function buildCategoryFormData(data = {}, asUpdate = false) {
     formData.append('slug', data.slug || '');
     formData.append('category_id', data.category_id || '');
 
+    if (data.image instanceof File) {
+        formData.append('image', data.image);
+    }
+
   
 
     if (asUpdate) {
@@ -51,7 +55,19 @@ function buildCategoryFormData(data = {}, asUpdate = false) {
 
 export async function fetchSubCategories(){
     const payload = await requestJson('/api/sub-categories');
-    return Array.isArray(payload)?payload:[];
+    if (Array.isArray(payload)) {
+        return payload;
+    }
+
+    if (Array.isArray(payload?.data)) {
+        return payload.data;
+    }
+
+    if (Array.isArray(payload?.subcategories)) {
+        return payload.subcategories;
+    }
+
+    return [];
 }
 
 export async function fetchSubCategory(id){

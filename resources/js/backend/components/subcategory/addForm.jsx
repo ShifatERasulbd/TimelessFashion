@@ -14,6 +14,9 @@ import { Separator } from '@/components/ui/separator';
 export default function AddForm({
 	form = {},
 	categories = [],
+	subCategory = null,
+	previews = {},
+	onFileChange,
 	onChange,
 	onSubmit,
 	onCancel,
@@ -79,6 +82,38 @@ export default function AddForm({
 							))}
 						</select>
 						{errors.category_id && <p className="text-xs text-destructive">{errors.category_id[0]}</p>}
+					</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="subcategory-image">
+							Image <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+						</Label>
+						<Input
+							id="subcategory-image"
+							name="image"
+							type="file"
+							accept="image/jpeg,image/png,image/gif,image/webp"
+							onChange={onFileChange}
+						/>
+						{previews?.image && (
+							<div className="mt-3 overflow-hidden rounded border bg-muted p-2">
+								<img
+									src={previews.image}
+									alt="Subcategory preview"
+									className="max-h-[28rem] w-auto max-w-full rounded object-contain"
+								/>
+							</div>
+						)}
+						{subCategory?.image_url && !previews?.image && (
+							<div className="mt-3 overflow-hidden rounded border bg-muted p-2">
+								<img
+									src={subCategory.image_url}
+									alt={subCategory.name || 'Current subcategory image'}
+									className="max-h-[28rem] w-auto max-w-full rounded object-contain"
+								/>
+							</div>
+						)}
+						{errors.image && <p className="text-xs text-destructive">{errors.image[0]}</p>}
 					</div>
 				</CardContent>
 

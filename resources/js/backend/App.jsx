@@ -37,6 +37,7 @@ const EditHero  = lazyWithRetry(() => import('@/pages/Hero/editHero'), 'edit-her
 // Personalization Management
 const PersonalizerFeatures = lazyWithRetry(() => import('../personalizer/features'), 'personalizer-features');
 const PersonalizerConfirmOrder = lazyWithRetry(() => import('../personalizer/confirm-order'), 'personalizer-confirm-order');
+const PersonalizerMockupPreview = lazyWithRetry(() => import('../personalizer/mockup-preview'), 'personalizer-mockup-preview');
 const PersonalizationOrders = lazyWithRetry(() => import('@/pages/Personalization/orders'), 'personalization-orders');
 const ViewPersonalizationOrder = lazyWithRetry(() => import('@/pages/Personalization/viewOrder'), 'personalization-order-view');
 const EditPersonalizationOrder = lazyWithRetry(() => import('@/pages/Personalization/editOrder'), 'personalization-order-edit');
@@ -55,6 +56,13 @@ const EditCategory = lazyWithRetry(() => import('@/pages/Category/editCategory')
 const SubCategories = lazyWithRetry(() => import('@/pages/SubCategory/subcategory'), 'sub-categories');
 const AddSubCategory = lazyWithRetry(() => import('@/pages/SubCategory/addSubCategory'), 'add-sub-category');
 const EditSubCategory = lazyWithRetry(() => import('@/pages/SubCategory/editSubCategory'), 'edit-sub-category');
+
+
+
+// Product Management
+const Products = lazyWithRetry(() => import('@/pages/Product/products'), 'products');
+const AddProduct = lazyWithRetry(() => import('@/pages/Product/addProduct'), 'add-product');
+const EditProduct = lazyWithRetry(() => import('@/pages/Product/editProduct'), 'edit-product');
 
 
 
@@ -100,10 +108,19 @@ export default function App() {
                             <Route path="sub-category/add" element={<AddSubCategory />} />
                             <Route path="sub-category/:id/edit" element={<EditSubCategory />} />
 
+
+                            {/* Product Management */}
+                            <Route path="products" element={<Products />} />
+                            <Route path="products/add" element={<AddProduct />} />
+                            <Route path="products/:id/edit" element={<EditProduct />} />
+
+                           
+
                         </Route>
 
                         <Route path="/personalizer/features" element={<PersonalizerFeatures />} />
                         <Route path="/personalizer/confirm-order" element={<PersonalizerConfirmOrder />} />
+                        <Route path="/personalizer/mockup-preview" element={<PersonalizerMockupPreview />} />
                         <Route path="/" element={<main />} />
 
                         {/* Hero Management */}

@@ -9,7 +9,7 @@ import { createHero } from './api';
 
 const initialForm = {
     title: '',
-    description: '',
+    description: '',   
     image: null,
     video: null,
 };
@@ -29,6 +29,8 @@ function validateForm(form) {
     if (!form.description.trim()) {
         errors.description = ['The description field is required.'];
     }
+
+  
 
     return errors;
 }

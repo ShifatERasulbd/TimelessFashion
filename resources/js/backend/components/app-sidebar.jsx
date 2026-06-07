@@ -4,6 +4,7 @@ import {
     Sparkles,
     Blocks,
     LayoutList,
+    Package,
     LogOut
   
 } from 'lucide-react';
@@ -33,6 +34,14 @@ const websiteItems = [
     { title: 'Features', icon: Blocks, path: '/admin/features' },
     { title: 'Categories', icon: LayoutList, path: '/admin/category' },
     { title: 'SubCategories', icon: LayoutList, path: '/admin/sub-category' },
+    
+]
+
+const inventoryItems = [
+    { title: 'Products', icon: Package, path: '/admin/products' },
+];
+
+const orderManagementItems = [
     { title: 'Personalization Orders', icon: Palette, path: '/admin/personalization/orders' },
 ]
 
@@ -85,7 +94,7 @@ export function AppSidebar(props) {
             <SidebarHeader className="border-b border-sidebar-border px-3 py-3">
                 <div className="flex items-center gap-2 px-1">
                     <span className="inline-flex size-4 rounded-full border border-sidebar-foreground/60" />
-                    <span className="text-sm font-semibold">AVANT</span>
+                    <span className="text-sm font-semibold">Timeless</span>
                 </div>
             </SidebarHeader>
 
@@ -139,10 +148,54 @@ export function AppSidebar(props) {
                     </SidebarGroup>
                 )}
 
-            
+                {inventoryItems.length > 0 && (
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Inventory</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {inventoryItems.map((item) => (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            tooltip={item.title}
+                                            isActive={isMenuItemActive(item.path)}
+                                        >
+                                            <Link to={item.path}>
+                                                <item.icon className="size-4 shrink-0 text-sidebar-foreground" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                )}
 
+                {orderManagementItems.length > 0 && (
+                    <SidebarGroup>
+                        <SidebarGroupLabel>Order Management</SidebarGroupLabel>
+                        <SidebarGroupContent>
+                            <SidebarMenu>
+                                {orderManagementItems.map((item) => (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton
+                                            asChild
+                                            tooltip={item.title}
+                                            isActive={isMenuItemActive(item.path)}
+                                        >
+                                            <Link to={item.path}>
+                                                <item.icon className="size-4 shrink-0 text-sidebar-foreground" />
+                                                <span>{item.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+                            </SidebarMenu>
+                        </SidebarGroupContent>
+                    </SidebarGroup>
+                )}
 
-                
             </SidebarContent>
 
             <SidebarFooter className="border-t border-sidebar-border">

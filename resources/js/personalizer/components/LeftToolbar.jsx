@@ -41,8 +41,8 @@ function ToolbarButton({ active, icon: Icon, label, onClick, disabled = false })
 
 export default function LeftToolbar({ activeTool, canUndo, canRedo, onSelectTool }) {
     return (
-        <aside className="rounded-[28px] border border-zinc-200 bg-white p-3 shadow-sm xl:sticky xl:top-6 xl:h-fit">
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-7 xl:grid-cols-1">
+        <aside className="rounded-[28px] border border-zinc-200 bg-white p-3 shadow-sm lg:sticky lg:top-6 lg:h-fit">
+            <div className="grid grid-cols-4 gap-2 sm:grid-cols-7 lg:grid-cols-1">
                 {TOOL_ITEMS.map((tool) => (
                     <ToolbarButton
                         key={tool.id}

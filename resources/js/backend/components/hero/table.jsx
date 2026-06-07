@@ -12,6 +12,30 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 
+function resolveMediaUrl(value, fallbackDirectory) {
+    if (!value) {
+        return null;
+    }
+
+    const raw = String(value);
+
+    if (/^(https?:)?\/\//i.test(raw) || raw.startsWith('data:')) {
+        return raw;
+    }
+
+    const normalized = raw.replace(/^\/+/, '');
+
+    if (normalized.startsWith('uploads/')) {
+        return `/${normalized}`;
+    }
+
+    if (normalized.includes('/')) {
+        return `/${normalized}`;
+    }
+
+    return `${fallbackDirectory}/${normalized}`;
+}
+
 export default function HeroTable({
     heroes = [],
     onAdd,
@@ -86,29 +110,39 @@ export default function HeroTable({
                         )}
 
                         {!isLoading &&
-                            filtered.map((hero, index) => (
+                            filtered.map((hero, index) => {
+                                const imageSrc = resolveMediaUrl(
+                                    hero.image_url || hero.image,
+                                    '/uploads/heroes/images'
+                                );
+                                const videoSrc = resolveMediaUrl(
+                                    hero.video_url || hero.video,
+                                    '/uploads/heroes/videos'
+                                );
+
+                                return (
                                 <TableRow key={hero.id}>
                                     <TableCell className="font-medium">{index + 1}</TableCell>
                                     <TableCell>{hero.title}</TableCell>
                                     <TableCell className="max-w-[300px] truncate">{hero.description}</TableCell>
                                     <TableCell>
-                                        {hero.image_url ? (
-                                            <img
-                                                src={hero.image_url}
+                                        {imageSrc ? (
+                                           <img
+                                                src={imageSrc}
                                                 alt={hero.title}
                                                 className="h-16 w-20 object-cover rounded cursor-pointer hover:opacity-80"
-                                                onClick={() => window.open(hero.image_url, '_blank')}
+                                                onClick={() => window.open(imageSrc, '_blank')}
                                             />
                                         ) : (
                                             <span className="text-muted-foreground">—</span>
                                         )}
                                     </TableCell>
                                     <TableCell>
-                                        {hero.video_url ? (
+                                        {videoSrc ? (
                                             <video
-                                                src={hero.video_url}
+                                                src={videoSrc}
                                                 className="h-16 w-20 object-cover rounded cursor-pointer hover:opacity-80"
-                                                onClick={() => window.open(hero.video_url, '_blank')}
+                                                onClick={() => window.open(videoSrc, '_blank')}
                                             />
                                         ) : (
                                             <span className="text-muted-foreground">—</span>
@@ -136,7 +170,8 @@ export default function HeroTable({
                                         </div>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                                );
+                            })}
                     </TableBody>
                 </Table>
             </Card>

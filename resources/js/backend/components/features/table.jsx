@@ -49,10 +49,7 @@ export default function FeaturesTable({
             </div>
 
             <Card className="w-full overflow-hidden border border-border/80 shadow-sm">
-                <div className="border-b bg-muted/20 px-4 py-3">
-                    <p className="text-sm font-medium">Feature List</p>
-                   
-                </div>
+                
 
                 <div className="w-full overflow-x-auto">
                     <Table>

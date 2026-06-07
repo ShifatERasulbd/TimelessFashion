@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Canvas, Circle, FabricImage, IText, Rect } from 'fabric';
+import { Canvas, Circle, FabricImage, IText, Path, Polygon, Rect, Triangle } from 'fabric';
 import { toast } from 'sonner';
 
 import CanvasStage from './components/CanvasStage';
@@ -56,7 +56,203 @@ function getLayerLabel(object) {
         return 'Rectangle';
     }
 
+    if (object?.type === 'triangle') {
+        return 'Triangle';
+    }
+
+    if (object?.type === 'polygon' && object?.get?.('shapeKind') === 'star') {
+        return 'Star';
+    }
+
     return object?.get?.('layerName') || 'Shape';
+}
+
+function createStarPoints(outerRadius = 70, innerRadius = 32, points = 5) {
+    const result = [];
+    const step = Math.PI / points;
+
+    for (let i = 0; i < points * 2; i += 1) {
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const angle = i * step - Math.PI / 2;
+
+        result.push({
+            x: Math.cos(angle) * radius,
+            y: Math.sin(angle) * radius,
+        });
+    }
+
+    return result;
+}
+
+function clampCurveAmount(value) {
+    return Math.max(-160, Math.min(160, Number(value) || 0));
+}
+
+function applyCurvedText(textObject) {
+    if (!isTextObject(textObject)) return;
+
+    const curveEnabled = textObject.get?.('curveEnabled') === true;
+    const curveAmount = clampCurveAmount(textObject.get?.('curveAmount'));
+
+    if (!curveEnabled || Math.abs(curveAmount) < 2) {
+        textObject.set({ path: undefined });
+        return;
+    }
+
+    const baseWidth = Math.max(40, Number(textObject.width || 0));
+    const halfChord = baseWidth / 2;
+    const sagitta = Math.max(8, Math.abs(curveAmount));
+    const radius = (halfChord * halfChord) / (2 * sagitta) + sagitta / 2;
+    const sweep = curveAmount > 0 ? 0 : 1;
+
+    const curvePath = new Path(
+        `M ${-halfChord} 0 A ${radius} ${radius} 0 0 ${sweep} ${halfChord} 0`,
+        { visible: false, evented: false }
+    );
+
+    textObject.set({
+        path: curvePath,
+        pathAlign: 'center',
+        pathSide: 'left',
+        pathStartOffset: 0,
+        curveAmount,
+    });
+}
+
+function normalizeCurvedTextScale(textObject, action = 'scale') {
+    if (!isTextObject(textObject) || textObject.get?.('curveEnabled') !== true) return;
+
+    const scaleX = Math.max(0.1, Number(textObject.scaleX || 1));
+    const scaleY = Math.max(0.1, Number(textObject.scaleY || 1));
+    let resizeRatio = (scaleX + scaleY) / 2;
+
+    if (action === 'scaleY') {
+        resizeRatio = scaleY;
+    }
+
+    resizeRatio = Math.max(0.25, Math.min(4, resizeRatio));
+
+    const nextFontSize = Math.max(6, Math.min(320, Math.round(Number(textObject.fontSize || 24) * resizeRatio)));
+
+    textObject.set({
+        fontSize: nextFontSize,
+        scaleX: 1,
+        scaleY: 1,
+    });
+}
+
+const UPLOADED_DESIGNS_STORAGE_KEY = 'personalizer:uploadedDesigns';
+const CANVAS_DRAFT_STORAGE_KEY = 'personalizer:canvasDraft';
+const PENDING_ORDER_STORAGE_KEY = 'personalizer:pendingOrder';
+const IMAGE_LAYERS_STORAGE_KEY = 'personalizer:imageLayersDraft';
+
+function isBlobObjectUrl(url) {
+    return typeof url === 'string' && url.startsWith('blob:');
+}
+
+function readFileAsDataUrl(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+        reader.onerror = () => reject(new Error('Failed to read uploaded file.'));
+        reader.readAsDataURL(file);
+    });
+}
+
+function snapshotHasBlobImageSource(snapshot) {
+    try {
+        const parsed = JSON.parse(snapshot);
+        const objects = parsed?.canvas?.objects;
+        if (!Array.isArray(objects)) return false;
+
+        return objects.some((object) => object?.type === 'image' && isBlobObjectUrl(object?.src));
+    } catch {
+        return true;
+    }
+}
+
+function readStoredUploadedDesigns() {
+    try {
+        const storedDesigns = localStorage.getItem(UPLOADED_DESIGNS_STORAGE_KEY);
+        if (!storedDesigns) return [];
+
+        const parsed = JSON.parse(storedDesigns);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function normalizeSnapshotImageSources(snapshot) {
+    const parsed = JSON.parse(snapshot);
+    const objects = parsed?.canvas?.objects;
+
+    if (!Array.isArray(objects)) {
+        return snapshot;
+    }
+
+    const uploadedDesigns = readStoredUploadedDesigns();
+    const uploadedDesignMap = new Map(
+        uploadedDesigns
+            .filter((design) => design && typeof design.id === 'string' && typeof design.url === 'string')
+            .map((design) => [design.id, design.url])
+    );
+
+    let didChange = false;
+
+    objects.forEach((object) => {
+        if (object?.type !== 'image') return;
+
+        const source = object.src || object.imageSource || uploadedDesignMap.get(object.designId) || '';
+        if (!source || object.src === source) return;
+
+        object.src = source;
+        object.imageSource = source;
+        didChange = true;
+    });
+
+    return didChange ? JSON.stringify(parsed) : snapshot;
+}
+
+function readStoredImageLayerDrafts() {
+    try {
+        const storedLayers = localStorage.getItem(IMAGE_LAYERS_STORAGE_KEY);
+        if (!storedLayers) return [];
+
+        const parsed = JSON.parse(storedLayers);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+function normalizeColorForInput(value, fallback = '#ffffff') {
+    if (typeof value !== 'string') return fallback;
+
+    const trimmed = value.trim();
+    if (/^#[0-9a-fA-F]{6}$/.test(trimmed)) {
+        return trimmed;
+    }
+
+    const shortHex = trimmed.match(/^#[0-9a-fA-F]{3}$/);
+    if (shortHex) {
+        const [, hex] = shortHex;
+        return `#${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`;
+    }
+
+    const rgbMatch = trimmed.match(/^rgba?\(([^)]+)\)$/i);
+    if (!rgbMatch) return fallback;
+
+    const [r = 255, g = 255, b = 255] = rgbMatch[1]
+        .split(',')
+        .map((part) => Number(part.trim()));
+
+    const toHex = (channel) => {
+        const clamped = Math.max(0, Math.min(255, Number.isFinite(channel) ? channel : 255));
+        return Math.round(clamped).toString(16).padStart(2, '0');
+    };
+
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
 export default function Features() {
@@ -79,6 +275,7 @@ export default function Features() {
     const [draftFontFamily, setDraftFontFamily] = useState('Montserrat');
     const [draftFontSize, setDraftFontSize] = useState(34);
     const [draftTextColor, setDraftTextColor] = useState('#ffffff');
+    const [draftShapeColor, setDraftShapeColor] = useState('#ffffff');
     const [uploadedDesigns, setUploadedDesigns] = useState([]);
     const [selectedDesignId, setSelectedDesignId] = useState(null);
     const [layers, setLayers] = useState([]);
@@ -100,9 +297,19 @@ export default function Features() {
         [layers]
     );
 
+    const activeShapeLayers = useMemo(
+        () => layers.filter((layer) => layer.type === 'shape'),
+        [layers]
+    );
+
     const selectedTextLayer = useMemo(
         () => activeTextLayers.find((layer) => layer.id === selectedObjectId) || null,
         [activeTextLayers, selectedObjectId]
+    );
+
+    const selectedShapeLayer = useMemo(
+        () => activeShapeLayers.find((layer) => layer.id === selectedObjectId) || null,
+        [activeShapeLayers, selectedObjectId]
     );
 
     useEffect(() => {
@@ -113,6 +320,12 @@ export default function Features() {
         setDraftFontSize(Number(selectedTextLayer.fontSize || 24));
         setDraftTextColor(selectedTextLayer.fill || '#111111');
     }, [selectedTextLayer]);
+
+    useEffect(() => {
+        if (!selectedShapeLayer) return;
+
+        setDraftShapeColor(normalizeColorForInput(selectedShapeLayer.fill, '#ffffff'));
+    }, [selectedShapeLayer]);
 
     const updateHistoryFlags = () => {
         setCanUndo(historyRef.current.length > 1);
@@ -278,6 +491,94 @@ export default function Features() {
         return getAllDesignObjects().find((object) => object.get?.('objectId') === objectId) || null;
     };
 
+    const persistImageLayerDrafts = () => {
+        const imageLayers = getAllDesignObjects()
+            .filter((object) => object.get?.('layerType') === 'image')
+            .map((object) => ({
+                objectId: object.get?.('objectId') || crypto.randomUUID(),
+                designId: object.get?.('designId') || null,
+                sourceName: object.get?.('sourceName') || 'Uploaded image',
+                imageSource: object.get?.('imageSource') || object.get?.('src') || object.src || '',
+                viewId: object.get?.('viewId') || 'front',
+                left: Number(object.left || 0),
+                top: Number(object.top || 0),
+                scaleX: Number(object.scaleX || 1),
+                scaleY: Number(object.scaleY || 1),
+                angle: Number(object.angle || 0),
+                hiddenByUser: object.get?.('hiddenByUser') === true,
+            }))
+            .filter((layer) => typeof layer.imageSource === 'string' && layer.imageSource.length > 0);
+
+        if (imageLayers.length === 0) {
+            localStorage.removeItem(IMAGE_LAYERS_STORAGE_KEY);
+            return;
+        }
+
+        localStorage.setItem(IMAGE_LAYERS_STORAGE_KEY, JSON.stringify(imageLayers));
+    };
+
+    const restoreImageLayerDrafts = async () => {
+        const canvas = getCanvas();
+        if (!canvas) return;
+
+        const cachedLayers = readStoredImageLayerDrafts();
+        if (cachedLayers.length === 0) return;
+
+        const existingObjectIds = new Set(
+            getAllDesignObjects()
+                .filter((object) => object.get?.('layerType') === 'image')
+                .map((object) => object.get?.('objectId'))
+                .filter(Boolean)
+        );
+
+        for (const layer of cachedLayers) {
+            if (!layer || !layer.imageSource || existingObjectIds.has(layer.objectId)) {
+                continue;
+            }
+
+            const image = await FabricImage.fromURL(layer.imageSource);
+
+            image.set({
+                originX: 'center',
+                originY: 'center',
+                left: Number(layer.left || 0),
+                top: Number(layer.top || 0),
+                scaleX: Number(layer.scaleX || 1),
+                scaleY: Number(layer.scaleY || 1),
+                angle: Number(layer.angle || 0),
+                selectable: true,
+                evented: true,
+                hasControls: true,
+                hasBorders: true,
+                cornerStyle: 'circle',
+                borderColor: '#2563eb',
+                cornerColor: '#2563eb',
+                transparentCorners: false,
+                objectId: layer.objectId || crypto.randomUUID(),
+                designId: layer.designId || null,
+                sourceName: layer.sourceName || 'Uploaded image',
+                imageSource: layer.imageSource,
+                viewId: layer.viewId || 'front',
+                layerType: 'image',
+                layerName: layer.sourceName || 'Uploaded image',
+                hiddenByUser: layer.hiddenByUser === true,
+                lockScalingFlip: true,
+            });
+
+            image.setControlsVisibility({
+                mtr: true,
+            });
+
+            image.setCoords();
+            updateImageVisibilityByArea(image, layer.viewId || activeViewRef.current);
+            canvas.add(image);
+            existingObjectIds.add(layer.objectId);
+        }
+
+        canvas.renderAll();
+        refreshLayers(activeViewRef.current);
+    };
+
     const serializeCanvasState = () => {
         const canvas = getCanvas();
         if (!canvas) return null;
@@ -305,6 +606,13 @@ export default function Features() {
 
         redoRef.current = [];
         updateHistoryFlags();
+
+        try {
+            localStorage.setItem(CANVAS_DRAFT_STORAGE_KEY, snapshot);
+            persistImageLayerDrafts();
+        } catch {
+            // Ignore storage quota failures and keep in-memory history working.
+        }
     };
 
     const syncSelectionState = () => {
@@ -350,6 +658,8 @@ export default function Features() {
                     fontWeight: object.fontWeight || '400',
                     fontStyle: object.fontStyle || 'normal',
                     underline: Boolean(object.underline),
+                    curveEnabled: object.get?.('curveEnabled') === true,
+                    curveAmount: Number(object.get?.('curveAmount') || 0),
                     textAlign: object.textAlign || 'center',
                     left: Number(currentLeft.toFixed(2)),
                     top: Number(currentTop.toFixed(2)),
@@ -450,7 +760,8 @@ export default function Features() {
         const canvas = getCanvas();
         if (!canvas || !snapshot) return;
 
-        const parsed = JSON.parse(snapshot);
+        const normalizedSnapshot = normalizeSnapshotImageSources(snapshot);
+        const parsed = JSON.parse(normalizedSnapshot);
         const view = PRODUCT_VIEWS.find((item) => item.id === parsed.activeView) || PRODUCT_VIEWS[0];
 
         isRestoringRef.current = true;
@@ -463,6 +774,7 @@ export default function Features() {
 
         await loadProductBase(view);
         applyViewVisibility(view.id);
+        await restoreImageLayerDrafts();
         getViewObjects(view.id).forEach((object) => {
             if (object.get?.('layerType') === 'image') {
                 updateImageVisibilityByArea(object, view.id);
@@ -510,11 +822,35 @@ export default function Features() {
             const target = event?.target;
             if (!target || target.get?.('isBaseImage')) return;
 
+            const action = event?.transform?.action;
+
+            if (isTextObject(target) && target.get?.('curveEnabled') === true) {
+                if (action === 'scaleX') {
+                    const delta = (Number(target.scaleX || 1) - 1) * 120;
+                    const nextCurveAmount = clampCurveAmount(Number(target.get?.('curveAmount') || 0) + delta);
+
+                    target.set({
+                        curveAmount: nextCurveAmount,
+                        scaleX: 1,
+                    });
+                    applyCurvedText(target);
+                } else if (action === 'scale' || action === 'scaleY') {
+                    // For curved text: corner/top-bottom handles resize the text.
+                    normalizeCurvedTextScale(target, action);
+                    applyCurvedText(target);
+                }
+            }
+
             if (target.get?.('layerType') === 'image') {
                 updateImageVisibilityByArea(target);
             } else {
-                const action = event?.transform?.action;
-                const shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
+                let shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
+
+                // Keep text sizing under user control; do not auto-shrink while resizing.
+                if (isTextObject(target)) {
+                    shouldFit = false;
+                }
+
                 clampObjectToArea(target, { shouldFit });
             }
             canvas.renderAll();
@@ -526,8 +862,21 @@ export default function Features() {
                 if (activeObject.get?.('layerType') === 'image') {
                     updateImageVisibilityByArea(activeObject);
                 } else {
+                    if (isTextObject(activeObject) && activeObject.get?.('curveEnabled') === true) {
+                        const action = event?.transform?.action;
+                        if (action === 'scale' || action === 'scaleY') {
+                            normalizeCurvedTextScale(activeObject, action);
+                        }
+                        applyCurvedText(activeObject);
+                    }
                     const action = event?.transform?.action;
-                    const shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
+                    let shouldFit = action === 'scale' || action === 'scaleX' || action === 'scaleY';
+
+                    if (isTextObject(activeObject)) {
+                        // Enforce fit once the resize ends so text never remains outside design bounds.
+                        shouldFit = shouldFit || !isObjectInsideArea(activeObject);
+                    }
+
                     clampObjectToArea(activeObject, { shouldFit });
                 }
             }
@@ -562,8 +911,24 @@ export default function Features() {
         if (!isReady) return;
 
         const initialize = async () => {
+            const persistedSnapshot = localStorage.getItem(CANVAS_DRAFT_STORAGE_KEY);
+
+            if (persistedSnapshot && !snapshotHasBlobImageSource(persistedSnapshot)) {
+                try {
+                    historyRef.current = [persistedSnapshot];
+                    redoRef.current = [];
+                    await restoreHistorySnapshot(persistedSnapshot);
+                    return;
+                } catch {
+                    localStorage.removeItem(CANVAS_DRAFT_STORAGE_KEY);
+                    historyRef.current = [];
+                    redoRef.current = [];
+                }
+            }
+
             await loadProductBase(PRODUCT_VIEWS[0], { resetHistory: true });
             applyViewVisibility(PRODUCT_VIEWS[0].id);
+            await restoreImageLayerDrafts();
         };
 
         initialize();
@@ -574,8 +939,50 @@ export default function Features() {
     }, [uploadedDesigns]);
 
     useEffect(() => {
+        try {
+            const storedDesigns = localStorage.getItem(UPLOADED_DESIGNS_STORAGE_KEY);
+            if (!storedDesigns) return;
+
+            const parsed = JSON.parse(storedDesigns);
+            if (!Array.isArray(parsed)) return;
+
+            const hydratedDesigns = parsed
+                .filter((design) => design && typeof design.id === 'string' && typeof design.name === 'string' && typeof design.url === 'string')
+                .map((design) => ({
+                    id: design.id,
+                    name: design.name,
+                    url: design.url,
+                }));
+
+            if (hydratedDesigns.length > 0) {
+                setUploadedDesigns(hydratedDesigns);
+            }
+        } catch {
+            localStorage.removeItem(UPLOADED_DESIGNS_STORAGE_KEY);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            const serializedDesigns = uploadedDesigns.map((design) => ({
+                id: design.id,
+                name: design.name,
+                url: design.url,
+            }));
+
+            localStorage.setItem(UPLOADED_DESIGNS_STORAGE_KEY, JSON.stringify(serializedDesigns));
+        } catch {
+            // Ignore quota/storage errors and continue with in-memory state.
+        }
+    }, [uploadedDesigns]);
+
+    useEffect(() => {
         return () => {
-            uploadedDesignsRef.current.forEach((design) => URL.revokeObjectURL(design.url));
+            uploadedDesignsRef.current.forEach((design) => {
+                if (isBlobObjectUrl(design.url)) {
+                    URL.revokeObjectURL(design.url);
+                }
+            });
         };
     }, []);
 
@@ -690,6 +1097,7 @@ export default function Features() {
         objectId,
         designId,
         sourceName,
+        imageSource: imageUrl,
 
         viewId: placement?.viewId || activeViewRef.current,
 
@@ -763,19 +1171,25 @@ export default function Features() {
         const files = Array.from(event.target.files || []);
         if (files.length === 0) return;
 
-        const designs = files.map((file) => ({
-            id: crypto.randomUUID(),
-            name: file.name,
-            url: URL.createObjectURL(file),
-        }));
+        try {
+            const designs = await Promise.all(
+                files.map(async (file) => ({
+                    id: crypto.randomUUID(),
+                    name: file.name,
+                    url: await readFileAsDataUrl(file),
+                }))
+            );
 
-        setUploadedDesigns((previous) => [...previous, ...designs]);
+            setUploadedDesigns((previous) => [...previous, ...designs]);
 
-        const firstDesign = designs[0];
-        setSelectedDesignId(firstDesign.id);
-        await addImageToCanvas(firstDesign.url, firstDesign.id, firstDesign.name);
-
-        event.target.value = '';
+            const firstDesign = designs[0];
+            setSelectedDesignId(firstDesign.id);
+            await addImageToCanvas(firstDesign.url, firstDesign.id, firstDesign.name);
+        } catch {
+            toast.error('Unable to process one or more uploaded images.');
+        } finally {
+            event.target.value = '';
+        }
     };
 
     const handleUseUploadedDesign = async (design) => {
@@ -795,7 +1209,7 @@ export default function Features() {
 
         setUploadedDesigns((previous) => {
             const target = previous.find((item) => item.id === designId);
-            if (target?.url) {
+            if (target?.url && isBlobObjectUrl(target.url)) {
                 URL.revokeObjectURL(target.url);
             }
 
@@ -813,7 +1227,9 @@ export default function Features() {
 
     const handleClearUploadedDesigns = () => {
         uploadedDesigns.forEach((design) => {
-            URL.revokeObjectURL(design.url);
+            if (isBlobObjectUrl(design.url)) {
+                URL.revokeObjectURL(design.url);
+            }
         });
 
         const canvas = getCanvas();
@@ -827,6 +1243,7 @@ export default function Features() {
         }
 
         setUploadedDesigns([]);
+        localStorage.removeItem(UPLOADED_DESIGNS_STORAGE_KEY);
         setSelectedDesignId(null);
         refreshLayers();
         syncSelectionState();
@@ -862,6 +1279,8 @@ export default function Features() {
             layerType: 'text',
             layerName: draftText.trim(),
             viewId: activeViewRef.current,
+            curveEnabled: false,
+            curveAmount: 0,
         });
 
         clampObjectToArea(textObject, { shouldFit: true });
@@ -880,27 +1299,41 @@ export default function Features() {
         const canvas = getCanvas();
         if (!canvas) return;
         const center = getDesignAreaCenter();
+        const shapeLabels = {
+            circle: 'Circle',
+            rect: 'Rectangle',
+            triangle: 'Triangle',
+            star: 'Star',
+        };
 
         const commonProps = {
             originX: 'center',
             originY: 'center',
             left: center.left,
             top: center.top,
-            fill: 'rgba(255,255,255,0.18)',
+            fill: draftShapeColor,
             stroke: '#111111',
             strokeWidth: 2,
             selectable: true,
             evented: true,
             objectId: crypto.randomUUID(),
             layerType: 'shape',
-            layerName: shapeKind === 'circle' ? 'Circle' : 'Rectangle',
+            layerName: shapeLabels[shapeKind] || 'Rectangle',
             shapeKind,
             viewId: activeViewRef.current,
         };
 
-        const shape = shapeKind === 'circle'
-            ? new Circle({ ...commonProps, radius: 60 })
-            : new Rect({ ...commonProps, width: 140, height: 140, rx: 24, ry: 24 });
+        let shape;
+
+        if (shapeKind === 'circle') {
+            shape = new Circle({ ...commonProps, radius: 60 });
+        } else if (shapeKind === 'triangle') {
+            shape = new Triangle({ ...commonProps, width: 140, height: 130 });
+        } else if (shapeKind === 'star') {
+            shape = new Polygon(createStarPoints(), { ...commonProps });
+        } else {
+            shape = new Rect({ ...commonProps, width: 140, height: 140, rx: 24, ry: 24 });
+        }
 
         clampObjectToArea(shape, { shouldFit: true });
 
@@ -914,19 +1347,46 @@ export default function Features() {
         recordHistory();
     };
 
+    const updateShapeLayer = (layerId, updates, shouldRecord = true) => {
+        const canvas = getCanvas();
+        const object = getObjectById(layerId);
+        if (!canvas || !object || object.get?.('layerType') !== 'shape') return;
+
+        object.set({
+            ...updates,
+            layerName: object.get?.('layerName') || getLayerLabel(object),
+        });
+
+        clampObjectToArea(object, { shouldFit: true });
+
+        canvas.renderAll();
+        refreshLayers();
+
+        if (shouldRecord) {
+            recordHistory();
+        }
+    };
+
     const updateTextLayer = (layerId, updates, shouldRecord = true) => {
         const canvas = getCanvas();
         const object = getObjectById(layerId);
         if (!canvas || !object || !isTextObject(object)) return;
 
+        const nextCurveEnabled = updates.curveEnabled ?? object.get?.('curveEnabled') === true;
+        const nextCurveAmount = clampCurveAmount(updates.curveAmount ?? object.get?.('curveAmount'));
+
         object.set({
             ...updates,
+            curveEnabled: nextCurveEnabled,
+            curveAmount: nextCurveAmount,
             layerName: updates.text || object.text || object.get?.('layerName'),
         });
 
         if (typeof updates.text === 'string') {
             object.set('text', updates.text);
         }
+
+        applyCurvedText(object);
 
         clampObjectToArea(object, { shouldFit: true });
 
@@ -1013,6 +1473,14 @@ export default function Features() {
 
         if (selectedTextLayer) {
             updateTextLayer(selectedTextLayer.id, { fill });
+        }
+    };
+
+    const handleDraftShapeColorChange = (fill) => {
+        setDraftShapeColor(fill);
+
+        if (selectedShapeLayer) {
+            updateShapeLayer(selectedShapeLayer.id, { fill });
         }
     };
 
@@ -1250,6 +1718,9 @@ export default function Features() {
                 imageUrl,
                 frontImageUrl: data?.data?.front_image_url || imageUrl,
                 backImageUrl: data?.data?.back_image_url || '',
+                cachedImageUrl: imageData || '',
+                cachedFrontImageUrl: frontImageData || imageData || '',
+                cachedBackImageUrl: backImageData || '',
                 quantity: orderQuantity,
                 unitPrice: PRODUCT_PRICE,
                 totalPrice: `$${totalPrice.toFixed(2)}`,
@@ -1259,7 +1730,8 @@ export default function Features() {
                 createdAt: new Date().toISOString(),
             };
 
-            sessionStorage.setItem('personalizer:pendingOrder', JSON.stringify(orderDetails));
+            sessionStorage.setItem(PENDING_ORDER_STORAGE_KEY, JSON.stringify(orderDetails));
+            localStorage.setItem(PENDING_ORDER_STORAGE_KEY, JSON.stringify(orderDetails));
             toast.success('Design saved successfully.');
             return orderDetails;
         } catch (error) {
@@ -1275,6 +1747,17 @@ export default function Features() {
         if (!orderDetails) return;
 
         navigate('/personalizer/confirm-order', {
+            state: {
+                orderDetails,
+            },
+        });
+    };
+
+    const handlePreviewMockups = async () => {
+        const orderDetails = await handleSaveOrderDesign();
+        if (!orderDetails) return;
+
+        navigate('/personalizer/mockup-preview', {
             state: {
                 orderDetails,
             },
@@ -1352,63 +1835,74 @@ export default function Features() {
                     onShare={handleShare}
                 />
 
-                <div className="grid flex-1 gap-4 xl:grid-cols-[88px_minmax(0,1.45fr)_380px]">
-                    <LeftToolbar
-                        activeTool={activeTool}
-                        canUndo={canUndo}
-                        canRedo={canRedo}
-                        onSelectTool={handleToolbarSelect}
-                    />
+                <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-[88px_minmax(0,1fr)] xl:grid-cols-[88px_minmax(0,1.35fr)_360px]">
+                    <div className="order-1 lg:order-1">
+                        <LeftToolbar
+                            activeTool={activeTool}
+                            canUndo={canUndo}
+                            canRedo={canRedo}
+                            onSelectTool={handleToolbarSelect}
+                        />
+                    </div>
 
-                    <CanvasStage
-                        canvasRef={canvasRef}
-                        productViews={PRODUCT_VIEWS}
-                        activeView={activeView}
-                        onSwitchView={handleSwitchView}
-                        onDropDesign={handleCanvasDropDesign}
-                    />
+                    <div className="order-2 lg:order-2 lg:col-start-2 xl:col-start-2">
+                        <CanvasStage
+                            canvasRef={canvasRef}
+                            productViews={PRODUCT_VIEWS}
+                            activeView={activeView}
+                            onSwitchView={handleSwitchView}
+                            onDropDesign={handleCanvasDropDesign}
+                        />
+                    </div>
 
-                    <CustomizePanel
-                        activeTool={activeTool}
-                        selectedColor={selectedColor}
-                        productColors={PRODUCT_COLORS}
-                        productColor={productColor}
-                        onSelectProductColor={setProductColor}
-                        onOpenUpload={() => fileInputRef.current?.click()}
-                        uploadedDesigns={uploadedDesigns}
-                        selectedDesignId={selectedDesignId}
-                        onClearUploadedDesigns={handleClearUploadedDesigns}
-                        usedDesignIds={usedDesignIds}
-                        onUseUploadedDesign={handleUseUploadedDesign}
-                        onRemoveUploadedDesign={handleRemoveUploadedDesign}
-                        draftText={draftText}
-                        onDraftTextChange={setDraftText}
-                        draftFontFamily={draftFontFamily}
-                        onDraftFontFamilyChange={handleDraftFontFamilyChange}
-                        draftFontSize={draftFontSize}
-                        onDraftFontSizeChange={handleDraftFontSizeChange}
-                        draftTextColor={draftTextColor}
-                        onDraftTextColorChange={handleDraftTextColorChange}
-                        onAddText={handleAddText}
-                        fontOptions={FONT_OPTIONS}
-                        activeImageLayers={activeImageLayers}
-                        activeTextLayers={activeTextLayers}
-                        selectedObjectId={selectedObjectId}
-                        onSelectObject={selectObject}
-                        onUpdateImageLayer={updateImageLayer}
-                        onUpdateTextLayer={updateTextLayer}
-                        onAddShape={addShape}
-                        onBringForward={handleBringForward}
-                        onSendBackward={handleSendBackward}
-                        onDeleteSelected={handleDeleteSelected}
-                        orderQuantity={orderQuantity}
-                        onDecreaseQuantity={() => setOrderQuantity((prev) => Math.max(1, prev - 1))}
-                        onIncreaseQuantity={() => setOrderQuantity((prev) => Math.min(99, prev + 1))}
-                        onDownload={handleDownloadBoth}
-                        onOrderNow={handleOrderNow}
-                        isSaving={isSaving}
-                        savedUrl={savedUrl}
-                    />
+                    <div className="order-3 lg:order-3 lg:col-span-2 xl:col-span-1 xl:col-start-3">
+                        <CustomizePanel
+                            activeTool={activeTool}
+                            selectedColor={selectedColor}
+                            productColors={PRODUCT_COLORS}
+                            productColor={productColor}
+                            onSelectProductColor={setProductColor}
+                            onOpenUpload={() => fileInputRef.current?.click()}
+                            uploadedDesigns={uploadedDesigns}
+                            selectedDesignId={selectedDesignId}
+                            onClearUploadedDesigns={handleClearUploadedDesigns}
+                            usedDesignIds={usedDesignIds}
+                            onUseUploadedDesign={handleUseUploadedDesign}
+                            onRemoveUploadedDesign={handleRemoveUploadedDesign}
+                            draftText={draftText}
+                            onDraftTextChange={setDraftText}
+                            draftFontFamily={draftFontFamily}
+                            onDraftFontFamilyChange={handleDraftFontFamilyChange}
+                            draftFontSize={draftFontSize}
+                            onDraftFontSizeChange={handleDraftFontSizeChange}
+                            draftTextColor={draftTextColor}
+                            onDraftTextColorChange={handleDraftTextColorChange}
+                            draftShapeColor={draftShapeColor}
+                            onDraftShapeColorChange={handleDraftShapeColorChange}
+                            onAddText={handleAddText}
+                            fontOptions={FONT_OPTIONS}
+                            activeImageLayers={activeImageLayers}
+                            activeTextLayers={activeTextLayers}
+                            activeShapeLayers={activeShapeLayers}
+                            selectedObjectId={selectedObjectId}
+                            onSelectObject={selectObject}
+                            onUpdateImageLayer={updateImageLayer}
+                            onUpdateTextLayer={updateTextLayer}
+                            onUpdateShapeLayer={updateShapeLayer}
+                            onAddShape={addShape}
+                            onBringForward={handleBringForward}
+                            onSendBackward={handleSendBackward}
+                            onDeleteSelected={handleDeleteSelected}
+                            orderQuantity={orderQuantity}
+                            onDecreaseQuantity={() => setOrderQuantity((prev) => Math.max(1, prev - 1))}
+                            onIncreaseQuantity={() => setOrderQuantity((prev) => Math.min(99, prev + 1))}
+                            onDownload={handleDownloadBoth}
+                            onPreviewMockups={handlePreviewMockups}
+                            onOrderNow={handleOrderNow}
+                            isSaving={isSaving}
+                            savedUrl={savedUrl}
+                        />
+                    </div>
                 </div>
             </div>
         </div>

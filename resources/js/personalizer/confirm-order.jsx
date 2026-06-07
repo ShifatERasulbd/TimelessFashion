@@ -5,6 +5,25 @@ import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 
+const PENDING_ORDER_STORAGE_KEY = 'personalizer:pendingOrder';
+
+function readStoredOrderDetails() {
+    const sources = [sessionStorage, localStorage];
+
+    for (const storage of sources) {
+        try {
+            const stored = storage.getItem(PENDING_ORDER_STORAGE_KEY);
+            if (!stored) continue;
+
+            return JSON.parse(stored);
+        } catch {
+            storage.removeItem(PENDING_ORDER_STORAGE_KEY);
+        }
+    }
+
+    return null;
+}
+
 export default function ConfirmOrder() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -14,15 +33,7 @@ export default function ConfirmOrder() {
     useEffect(() => {
         if (orderDetails) return;
 
-        const stored = sessionStorage.getItem('personalizer:pendingOrder');
-        if (!stored) return;
-
-        try {
-            const parsed = JSON.parse(stored);
-            setOrderDetails(parsed);
-        } catch {
-            setOrderDetails(null);
-        }
+        setOrderDetails(readStoredOrderDetails());
     }, [orderDetails]);
 
     const formattedDate = useMemo(() => {
@@ -66,7 +77,8 @@ export default function ConfirmOrder() {
                 throw new Error(data?.message || 'Failed to place order.');
             }
 
-            sessionStorage.removeItem('personalizer:pendingOrder');
+            sessionStorage.removeItem(PENDING_ORDER_STORAGE_KEY);
+            localStorage.removeItem(PENDING_ORDER_STORAGE_KEY);
             setIsPlaced(true);
             toast.success('Order placed! We will contact you soon.');
         } catch (error) {
@@ -89,8 +101,8 @@ export default function ConfirmOrder() {
         );
     }
 
-    const frontImageUrl = orderDetails?.frontImageUrl || orderDetails?.imageUrl || '';
-    const backImageUrl = orderDetails?.backImageUrl || '';
+    const frontImageUrl = orderDetails?.cachedFrontImageUrl || orderDetails?.frontImageUrl || orderDetails?.cachedImageUrl || orderDetails?.imageUrl || '';
+    const backImageUrl = orderDetails?.cachedBackImageUrl || orderDetails?.backImageUrl || orderDetails?.cachedFrontImageUrl || orderDetails?.frontImageUrl || '';
 
     return (
         <main className="min-h-screen bg-[#f7f5ef] p-4 sm:p-6">
@@ -173,6 +185,14 @@ export default function ConfirmOrder() {
                         </div>
                     ) : (
                         <>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                disabled={isPlacing}
+                                onClick={() => navigate('/personalizer/mockup-preview', { state: { orderDetails } })}
+                            >
+                                Preview mockups
+                            </Button>
                             <Button type="button" variant="outline" disabled={isPlacing} onClick={() => navigate('/personalizer/features')}>
                                 Edit design
                             </Button>

@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    'inventory' => [
+        'base_url' => env('INVENTORY_API_BASE_URL'),
+        'canada_api_key' => env('INVENTORY_CANADA_API_KEY'),
+        'canada_warehouse_id' => env('INVENTORY_CANADA_WAREHOUSE_ID'),
+        'verify_ssl' => env('INVENTORY_API_VERIFY_SSL'),
+        'ca_bundle_path' => env('INVENTORY_API_CA_BUNDLE_PATH'),
+    ],
+
 ];

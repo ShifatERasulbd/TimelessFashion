@@ -23,7 +23,12 @@ export default function SubCategoryTable({
     const [search, setSearch] = useState('');
 
     const filtered = subCategories.filter((c) => {
-        const q = search.toLowerCase();
+        const q = search.trim().toLowerCase();
+
+        if (!q) {
+            return true;
+        }
+
         return (
             c.name?.toLowerCase().includes(q) ||
             c.slug?.toLowerCase().includes(q)||
@@ -50,16 +55,14 @@ export default function SubCategoryTable({
             </div>
 
             <Card className="w-full overflow-hidden border border-border/80 shadow-sm">
-                <div className="border-b bg-muted/20 px-4 py-3">
-                    <p className="text-sm font-medium">SubCategory List</p>
-                   
-                </div>
+              
 
                 <div className="w-full overflow-x-auto">
                     <Table>
                     <TableHeader>
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
                             <TableHead className="w-[100px]">SL No</TableHead>
+                            <TableHead>Image</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead>Slug</TableHead>
                             <TableHead>Category</TableHead>
@@ -70,7 +73,7 @@ export default function SubCategoryTable({
                     <TableBody>
                         {isLoading && (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     Loading SubCategory...
                                 </TableCell>
                             </TableRow>
@@ -78,7 +81,7 @@ export default function SubCategoryTable({
 
                         {!isLoading && subCategories.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     No subcategories found.
                                 </TableCell>
                             </TableRow>
@@ -86,7 +89,7 @@ export default function SubCategoryTable({
 
                         {!isLoading && filtered.length === 0 && subCategories.length > 0 && (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                     No subcategories match your search.
                                 </TableCell>
                             </TableRow>
@@ -96,6 +99,19 @@ export default function SubCategoryTable({
                             filtered.map((subcategory, index) => (
                                 <TableRow key={subcategory.id} className="hover:bg-muted/20">
                                     <TableCell className="font-medium text-muted-foreground">{index + 1}</TableCell>
+                                    <TableCell>
+                                        {subcategory.image_url ? (
+                                            <img
+                                                src={subcategory.image_url}
+                                                alt={subcategory.name}
+                                                className="h-12 w-12 rounded border object-cover bg-muted"
+                                            />
+                                        ) : (
+                                            <div className="flex h-12 w-12 items-center justify-center rounded border bg-muted text-xs text-muted-foreground">
+                                                N/A
+                                            </div>
+                                        )}
+                                    </TableCell>
                                     <TableCell className="font-medium">{subcategory.name}</TableCell>
                                     <TableCell className="max-w-[380px] truncate">{subcategory.slug}</TableCell>
                                     <TableCell className="font-medium">{subcategory.category?.name || '-'}</TableCell>

@@ -11,8 +11,13 @@ const initialForm = {
     name: '',
     slug: '',
     category_id: '',
+    image: null,
     
 };
+
+const initialPreviews={
+    image: null,
+}
 
 function slugify(value = '') {
     return value
@@ -53,6 +58,15 @@ export default function AddSubCategory() {
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [requestError, setRequestError] = useState('');
+    const [previews, setPreviews] = useState(initialPreviews);
+
+    useEffect(() => {
+        return () => {
+            if (previews.image) {
+                URL.revokeObjectURL(previews.image);
+            }
+        };
+    }, [previews.image]);
 
     useEffect(() => {
         setPageTitle('Add SubCategory');
@@ -105,6 +119,30 @@ export default function AddSubCategory() {
         });
     };
 
+    const handleFileChange = (event) => {
+        const { name, files } = event.target;
+        const file = files && files.length > 0 ? files[0] : null;
+
+        setForm((previous) => ({ ...previous, [name]: file }));
+
+        if (previews[name]) {
+            URL.revokeObjectURL(previews[name]);
+        }
+
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setPreviews((previous) => ({ ...previous, [name]: previewUrl }));
+        } else {
+            setPreviews((previous) => ({ ...previous, [name]: null }));
+        }
+
+        setErrors((previous) => {
+                if (!previous[name]) return previous;
+                const next = { ...previous };
+                delete next[name];
+                return next;
+        });
+    };
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -124,6 +162,7 @@ export default function AddSubCategory() {
                 name: form.name.trim(),
                 slug: form.slug.trim(),
                 category_id: form.category_id.trim(),
+                image: form.image,
             });
 
             toast.success('SubCategory created successfully.', {
@@ -150,10 +189,12 @@ export default function AddSubCategory() {
                     form={form}
                     categories={categories}
                     onChange={handleChange}
+                    onFileChange={handleFileChange}
                     onSubmit={handleSubmit}
                     onCancel={() => navigate('/admin/sub-category')}
                     isSubmitting={isSubmitting}
                     errors={errors}
+                    previews={previews}
                 />
             </div>
         </div>

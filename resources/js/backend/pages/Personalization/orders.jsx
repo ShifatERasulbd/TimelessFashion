@@ -118,9 +118,7 @@ export default function PersonalizationOrders() {
             {errorMessage && <p className="text-sm text-destructive">{errorMessage}</p>}
 
             <Card>
-                <CardHeader>
-                    <CardTitle>Personalization Orders</CardTitle>
-                </CardHeader>
+                
                 <CardContent>
                     <Table>
                         <TableHeader>
