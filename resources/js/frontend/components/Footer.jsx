@@ -73,11 +73,11 @@ export default function Footer() {
             <div className="w-full px-6 pb-10 pt-10 sm:px-8 lg:px-12 lg:pt-14">
                 <div className="grid gap-12 lg:grid-cols-[1.15fr_0.8fr_0.8fr_1fr] lg:gap-16 xl:grid-cols-[1.25fr_0.78fr_0.78fr_1fr]">
                     <section className="max-w-md space-y-5">
-                        <Link to="/" className="inline-flex text-3xl font-black tracking-[0.18em] text-black sm:text-[2.4rem]">
+                        <Link to="/" className="inline-flex text-3xl font-black tracking-[0.18em] text-black sm:text-[1.6rem]">
                             TIMELESS
                         </Link>
 
-                        <p className="max-w-sm text-[0.95rem] leading-7 text-zinc-600 sm:text-[1.05rem]">
+                        <p className="max-w-sm text-[1.05rem] leading-[1.5] text-zinc-600 sm:text-[.9rem]">
                             Welcome to Timeless Fashion, where quality meets creativity and every thread tells a story. Proudly Canadian and built on years of industry expertise, we’re more than just a textile company.
                         </p>
 
@@ -91,10 +91,10 @@ export default function Footer() {
                     </section>
 
                     <nav aria-label="Quick links" className="space-y-4">
-                        <h2 className="text-[1.6rem] font-medium uppercase tracking-[0.14em] text-zinc-900 sm:text-[1.75rem]">
+                        <h2 className="font-serif text-[2rem] font-normal uppercase tracking-[0.06em] text-zinc-900 sm:text-[1.5rem]">
                             Quick Links
                         </h2>
-                        <ul className="space-y-2.5 text-[0.88rem] uppercase tracking-[0.24em] text-zinc-950 sm:text-[0.95rem]">
+                        <ul className="space-y-1 text-[1.03rem] uppercase tracking-[0.12em] text-zinc-950 sm:text-[.8rem]">
                             {quickLinks.map((item) => (
                                 <li key={item}>
                                     <a href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} className="transition-colors hover:text-zinc-500">
@@ -106,10 +106,10 @@ export default function Footer() {
                     </nav>
 
                     <nav aria-label="Help and info" className="space-y-4">
-                        <h2 className="text-[1.6rem] font-medium uppercase tracking-[0.14em] text-zinc-900 sm:text-[1.75rem]">
+                        <h2 className="font-serif text-[2rem] font-normal uppercase tracking-[0.06em] text-zinc-900 sm:text-[1.5rem]">
                             Help &amp; Info
                         </h2>
-                        <ul className="space-y-2.5 text-[0.88rem] uppercase tracking-[0.24em] text-zinc-950 sm:text-[0.95rem]">
+                        <ul className="space-y-1 text-[1.03rem] uppercase tracking-[0.12em] text-zinc-950 sm:text-[.8rem]">
                             {helpLinks.map((item) => (
                                 <li key={item}>
                                     <a href={`#${item.toLowerCase().replace(/\s+/g, '-')}`} className="transition-colors hover:text-zinc-500">
@@ -121,11 +121,11 @@ export default function Footer() {
                     </nav>
 
                     <section className="space-y-4">
-                        <h2 className="text-[1.6rem] font-medium uppercase tracking-[0.14em] text-zinc-900 sm:text-[1.75rem]">
+                        <h2 className="font-serif text-[2rem] font-normal uppercase tracking-[0.06em] text-zinc-900 sm:text-[1.5rem]">
                             Contact Us
                         </h2>
 
-                        <div className="space-y-5 text-[1rem] leading-7 text-zinc-700 sm:text-[1.05rem]">
+                        <div className="space-y-5 text-[1.05rem] leading-[1.45] text-zinc-700 sm:text-[.9rem]">
                             <p>
                                 Do you have any questions or suggestions?
                                 <br />
@@ -172,7 +172,7 @@ export default function Footer() {
                     </div>
 
                     <p className="text-center text-[0.85rem] leading-6 text-zinc-600 lg:text-right">
-                        © Copyright 2026 Timeless.ca. All rights reserved. Design by Jawad Khan
+                        © Copyright 2026 Timeless.ca. All rights reserved. 
                     </p>
                 </div>
             </div>
