@@ -6,6 +6,7 @@ import Header from './frontend/components/Header.jsx';
 import Footer from './frontend/components/Footer.jsx';
 import HomePage from './frontend/pages/HomePage.jsx';
 import ShopPage from './frontend/pages/ShopPage.jsx';
+import SingleProductPage from './frontend/pages/singleProduct.jsx';
 
 function FrontendLayout() {
     return (
@@ -26,6 +27,7 @@ function AppRouter() {
                 <Route path="/" element={<FrontendLayout />}>
                     <Route index element={<HomePage />} />
                     <Route path="shop" element={<ShopPage />} />
+                    <Route path="singleProduct" element={<SingleProductPage />} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
