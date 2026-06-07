@@ -9,7 +9,11 @@ import { createHero } from './api';
 
 const initialForm = {
     title: '',
-    description: '',   
+    description: '',
+    title_font_size: '124',
+    title_font_family: 'instrument-sans',
+    description_font_size: '24',
+    description_font_family: 'instrument-sans',
     image: null,
     video: null,
 };
@@ -99,6 +103,10 @@ export default function AddHero() {
             await createHero({
                 title: form.title.trim(),
                 description: form.description.trim(),
+                title_font_size: form.title_font_size,
+                title_font_family: form.title_font_family,
+                description_font_size: form.description_font_size,
+                description_font_family: form.description_font_family,
                 image: form.image,
                 video: form.video,
             });

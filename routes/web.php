@@ -12,7 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return response('', 200);
+    return view('home');
 });
 
 Route::get('/admin', function () {
@@ -25,6 +25,7 @@ Route::get('/personalizer/{path?}', function () {
 
 Route::prefix('api')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
+    Route::get('/public/hero', [HeroController::class, 'publicHero']);
     Route::post('/personalizations', [PersonalizationController::class, 'store']);
     Route::patch('/personalizations/{personalization}/confirm', [PersonalizationController::class, 'confirm']);
 

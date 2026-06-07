@@ -38,6 +38,10 @@ function buildHeroFormData(data = {}, asUpdate = false) {
 
     formData.append('title', data.title || '');
     formData.append('description', data.description || '');
+    formData.append('title_font_size', data.title_font_size || '');
+    formData.append('title_font_family', data.title_font_family || '');
+    formData.append('description_font_size', data.description_font_size || '');
+    formData.append('description_font_family', data.description_font_family || '');
 
     if (data.image instanceof File) {
         formData.append('image', data.image);

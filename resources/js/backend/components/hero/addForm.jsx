@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { heroFontFamilyOptions } from '../../../utils/heroTypography';
 
 function resolveMediaUrl(value, fallbackDirectory) {
     if (!value) {
@@ -68,20 +69,64 @@ export default function AddForm({
             <form onSubmit={onSubmit}>
                 <CardContent className="space-y-6 pt-6">
                     {/* Title */}
-                    <div className="space-y-2">
-                        <Label htmlFor="hero-title">
-                            Title <span className="text-destructive">*</span>
-                        </Label>
-                        <Input
-                            id="hero-title"
-                            name="title"
-                            value={form.title || ''}
-                            onChange={onChange}
-                            placeholder="e.g. Welcome to our store"
-                        />
-                        {errors.title && (
-                            <p className="text-xs text-destructive">{errors.title[0]}</p>
-                        )}
+                   
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-12 md:items-end">
+                        <div className="space-y-2 md:col-span-8">
+                              <Label htmlFor="hero-title">Title <span className="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="hero-title"
+                                name="title"
+                                value={form.title || ''}
+                                onChange={onChange}
+                                placeholder="e.g. Welcome to our store"
+                            />
+                            {errors.title && (
+                                <p className="text-xs text-destructive">{errors.title[0]}</p>
+                            )}
+                          </div>
+
+                        <div className="md:col-span-4">
+                            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div className="space-y-2">
+                                    <Label htmlFor="hero-title-font-size">Title Font Size (px)</Label>
+                                    <Input
+                                        id="hero-title-font-size"
+                                        name="title_font_size"
+                                        type="number"
+                                        min={20}
+                                        max={220}
+                                        value={form.title_font_size || ''}
+                                        onChange={onChange}
+                                        placeholder="e.g. 124"
+                                    />
+                                    {errors.title_font_size && (
+                                        <p className="text-xs text-destructive">{errors.title_font_size[0]}</p>
+                                    )}
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label htmlFor="hero-title-font-family">Title Font Family</Label>
+                                    <select
+                                        id="hero-title-font-family"
+                                        name="title_font_family"
+                                        value={form.title_font_family || 'instrument-sans'}
+                                        onChange={onChange}
+                                        className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none ring-offset-background focus-visible:ring-1 focus-visible:ring-ring"
+                                    >
+                                        {heroFontFamilyOptions.map((option) => (
+                                            <option key={option.value} value={option.value}>
+                                                {option.label}
+                                            </option>
+                                        ))}
+                                    </select>
+                                    {errors.title_font_family && (
+                                        <p className="text-xs text-destructive">{errors.title_font_family[0]}</p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                      
                     </div>
 
                     {/* Description */}
@@ -101,6 +146,49 @@ export default function AddForm({
                         {errors.description && (
                             <p className="text-xs text-destructive">{errors.description[0]}</p>
                         )}
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                    
+
+               
+
+                        <div className="space-y-2">
+                            <Label htmlFor="hero-description-font-size">Description Font Size (px)</Label>
+                            <Input
+                                id="hero-description-font-size"
+                                name="description_font_size"
+                                type="number"
+                                min={10}
+                                max={100}
+                                value={form.description_font_size || ''}
+                                onChange={onChange}
+                                placeholder="e.g. 24"
+                            />
+                            {errors.description_font_size && (
+                                <p className="text-xs text-destructive">{errors.description_font_size[0]}</p>
+                            )}
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="hero-description-font-family">Description Font Family</Label>
+                            <select
+                                id="hero-description-font-family"
+                                name="description_font_family"
+                                value={form.description_font_family || 'instrument-sans'}
+                                onChange={onChange}
+                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none ring-offset-background focus-visible:ring-1 focus-visible:ring-ring"
+                            >
+                                {heroFontFamilyOptions.map((option) => (
+                                    <option key={option.value} value={option.value}>
+                                        {option.label}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.description_font_family && (
+                                <p className="text-xs text-destructive">{errors.description_font_family[0]}</p>
+                            )}
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 gap-5 md:grid-cols-2">

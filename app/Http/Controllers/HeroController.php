@@ -18,11 +18,22 @@ class HeroController extends Controller
         return response()->json($heros);
     }
 
+    public function publicHero(): JsonResponse
+    {
+        $hero = Hero::query()->latest('id')->first();
+
+        return response()->json($hero);
+    }
+
     public function store(Request $request):JsonResponse
     {
         $validated=$request->validate([
             'title'=>['required','string','max:255'],
             'description'=>['required','string'],
+            'title_font_size'=>['nullable','integer','min:20','max:220'],
+            'title_font_family'=>['nullable','string','max:100'],
+            'description_font_size'=>['nullable','integer','min:10','max:100'],
+            'description_font_family'=>['nullable','string','max:100'],
             'image'=>['nullable','image','mimes:jpeg,png,jpg,gif,webp','max:2048'],
             'video'=>['nullable','file','mimes:mp4,mov,avi,webm','max:10240'],
         ]);
@@ -62,6 +73,10 @@ class HeroController extends Controller
         $validated=$request->validate([
             'title'=>['nullable','string','max:255'],
             'description'=>['nullable','string'],
+            'title_font_size'=>['nullable','integer','min:20','max:220'],
+            'title_font_family'=>['nullable','string','max:100'],
+            'description_font_size'=>['nullable','integer','min:10','max:100'],
+            'description_font_family'=>['nullable','string','max:100'],
             'image'=>['nullable','image','mimes:jpeg,png,jpg,gif,webp','max:2048'],
             'video'=>['nullable','file','mimes:mp4,mov,avi,webm','max:10240'],
         ]);

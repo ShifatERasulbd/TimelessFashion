@@ -12,8 +12,17 @@ class Hero extends Model
     protected $fillable = [
         'title',
         'description',
+        'title_font_size',
+        'title_font_family',
+        'description_font_size',
+        'description_font_family',
         'image',
         'video',
+    ];
+
+    protected $casts = [
+        'title_font_size' => 'integer',
+        'description_font_size' => 'integer',
     ];
 
     protected $appends = [
