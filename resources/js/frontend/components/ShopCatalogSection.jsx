@@ -84,10 +84,7 @@ function SidebarFilterRow({ title, open = false, children }) {
 function ShopSidebar() {
     return (
         <aside className="bg-white px-6 py-5 sm:px-8 sm:py-7">
-            <h2 className="font-serif text-[2.9rem] leading-none text-zinc-950 sm:text-[3.2rem]">
-                Products
-            </h2>
-
+            
             <div className="mt-8 space-y-9">
                 <SidebarFilterRow title="Product Categories" open>
                     <ul className="space-y-2.5 text-[1.05rem] leading-8 text-slate-600 sm:text-[1.08rem]">

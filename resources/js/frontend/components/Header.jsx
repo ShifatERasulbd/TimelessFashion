@@ -10,6 +10,30 @@ const navigationItems = [
     { label: 'Contact', href: '#contact' },
 ];
 
+const shopMegaMenuColumns = [
+    {
+        title: 'Men',
+        items: ['Tshirt', 'Sweatshirt', 'Hoodie', 'Full Sleeve t-shirt'],
+    },
+    {
+        title: 'Women',
+        items: ['Tshirt', 'Sweatshirt', 'Hoodie', 'Full Sleeve t-shirt'],
+    },
+    {
+        title: 'Youth',
+        items: ['Tshirt', 'Sweatshirt', 'Hoodie', 'Full Sleeve t-shirt'],
+    },
+    {
+        title: 'Shop By Event',
+        items: ['Corporates', 'Spirit wear', 'Education', 'Sports'],
+    },
+];
+
+const shopMegaMenuImages = [
+    '/uploads/heroes/images/hero1.webp',
+    '/uploads/personalizer/order/order-design-ec8725a6-cb1f-456a-b929-ebf789cc956d.png',
+];
+
 const utilityIcons = [
     { label: 'Account', icon: UserRound, href: '#account' },
     { label: 'Search', icon: Search, href: '#search' },
@@ -18,7 +42,7 @@ const utilityIcons = [
 
 export default function Header() {
     return (
-        <header className={`${timelessFontClass} sticky top-0 z-50 border-b border-zinc-200 bg-[#f4f2ed]/95 text-zinc-950 backdrop-blur`}>
+        <header className={`${timelessFontClass} sticky top-0 z-50 border-b border-zinc-200 bg-white text-zinc-950 backdrop-blur`}>
             <div className="mx-auto flex h-[90px] max-w-[1920px] items-center gap-4 px-4 sm:px-6 lg:px-10">
                 <Link
                     to="/"
@@ -29,8 +53,61 @@ export default function Header() {
                 </Link>
 
                 <nav className="hidden flex-1 items-center justify-center gap-10 xl:flex" aria-label="Primary">
-                    {navigationItems.map((item) => (
-                        item.href.startsWith('/') ? (
+                    {navigationItems.map((item) =>
+                        item.label === 'Shop' ? (
+                            <div key={item.label} className="group relative flex items-center py-4">
+                                <Link
+                                    to={item.href}
+                                    className="text-[0.85rem] font-medium uppercase tracking-[0.22em] text-zinc-950 transition-opacity hover:opacity-60"
+                                >
+                                    {item.label}
+                                </Link>
+
+                                <div className="invisible fixed left-0 right-0 top-[90px] z-50 w-full opacity-0 transition-all duration-200 group-hover:visible group-hover:opacity-100">
+                                    <div className="border border-zinc-200 bg-white px-4 py-8 shadow-[0_18px_60px_rgba(0,0,0,0.08)] sm:px-6 lg:px-10">
+                                        <div className="mx-auto grid w-full max-w-[1920px] grid-cols-[1.15fr_1.15fr_1.15fr_1.15fr_1.1fr] gap-8 xl:gap-10">
+                                            {shopMegaMenuColumns.map((column) => (
+                                                <div key={column.title} className="space-y-4">
+                                                    <h3 className="text-[0.72rem] uppercase tracking-[0.18em] text-zinc-400">
+                                                        {column.title}
+                                                    </h3>
+                                                    <ul className="space-y-2 text-[0.88rem] leading-6 text-zinc-600">
+                                                        {column.items.map((itemLabel) => (
+                                                            <li key={itemLabel}>
+                                                                <Link
+                                                                    to="/shop"
+                                                                    className="transition-colors hover:text-zinc-950"
+                                                                >
+                                                                    {itemLabel}
+                                                                </Link>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            ))}
+
+                                            <div className="flex justify-center">
+                                                <figure className="w-full max-w-[240px] text-center">
+                                                    <Link to="/shop" className="flex flex-col gap-3 overflow-hidden bg-zinc-100 p-3">
+                                                        {shopMegaMenuImages.map((image, index) => (
+                                                            <img
+                                                                key={image}
+                                                                src={image}
+                                                                alt={index === 0 ? 'Future Classics New Arrivals' : 'Timeless custom apparel'}
+                                                                className="h-[128px] w-full object-cover object-center"
+                                                            />
+                                                        ))}
+                                                    </Link>
+                                                    <figcaption className="mt-3 text-[0.7rem] uppercase tracking-[0.08em] text-zinc-500">
+                                                        Future Classics New Arrivals
+                                                    </figcaption>
+                                                </figure>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ) : item.href.startsWith('/') ? (
                             <Link
                                 key={item.label}
                                 to={item.href}
@@ -47,7 +124,7 @@ export default function Header() {
                                 {item.label}
                             </a>
                         )
-                    ))}
+                    )}
                 </nav>
 
                 <div className="ml-auto flex items-center gap-2 sm:gap-3">
