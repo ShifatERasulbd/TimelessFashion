@@ -5,7 +5,7 @@ import { timelessFontClass } from '../../utils/typography';
 
 const navigationItems = [
     { label: 'Best Sellers', href: '#best-sellers' },
-    { label: 'Shop', href: '#shop' },
+    { label: 'Shop', href: '/shop' },
     { label: 'About', href: '#about' },
     { label: 'Contact', href: '#contact' },
 ];
@@ -30,13 +30,23 @@ export default function Header() {
 
                 <nav className="hidden flex-1 items-center justify-center gap-10 xl:flex" aria-label="Primary">
                     {navigationItems.map((item) => (
-                        <a
-                            key={item.label}
-                            href={item.href}
-                            className="text-[0.85rem] font-medium uppercase tracking-[0.22em] text-zinc-950 transition-opacity hover:opacity-60"
-                        >
-                            {item.label}
-                        </a>
+                        item.href.startsWith('/') ? (
+                            <Link
+                                key={item.label}
+                                to={item.href}
+                                className="text-[0.85rem] font-medium uppercase tracking-[0.22em] text-zinc-950 transition-opacity hover:opacity-60"
+                            >
+                                {item.label}
+                            </Link>
+                        ) : (
+                            <a
+                                key={item.label}
+                                href={item.href}
+                                className="text-[0.85rem] font-medium uppercase tracking-[0.22em] text-zinc-950 transition-opacity hover:opacity-60"
+                            >
+                                {item.label}
+                            </a>
+                        )
                     ))}
                 </nav>
 

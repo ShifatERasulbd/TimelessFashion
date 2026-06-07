@@ -15,6 +15,10 @@ Route::get('/', function () {
     return view('home');
 });
 
+Route::get('/shop', function () {
+    return view('home');
+});
+
 Route::get('/admin', function () {
     return view('app');
 })->name('login');
