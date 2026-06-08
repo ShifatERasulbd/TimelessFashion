@@ -112,7 +112,7 @@ export default function SingleProductDetailsPanel({
 
                     <button
                         type="button"
-                        className="inline-flex h-[52px] flex-1 min-w-[240px] items-center justify-center bg-zinc-600 px-6 text-[1.2rem] font-medium uppercase tracking-[0.05em] text-white transition-colors hover:bg-zinc-700"
+                        className="inline-flex h-[52px] flex-1 min-w-[240px] cursor-pointer items-center justify-center bg-zinc-900 px-6 text-[1.2rem] font-semibold uppercase tracking-[0.05em] text-white shadow-sm transition-all duration-200 hover:bg-black hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
                     >
                         Add To Cart
                     </button>
