@@ -7,7 +7,7 @@ const navigationItems = [
     { label: 'Best Sellers', href: '#best-sellers' },
     { label: 'Shop', href: '/shop' },
     { label: 'About', href: '/about' },
-    { label: 'Contact', href: '#contact' },
+    { label: 'Contact', href: '/contact' },
 ];
 
 const shopMegaMenuColumns = [
@@ -32,7 +32,7 @@ const shopMegaMenuColumns = [
 const shopMegaMenuImage = '/uploads/heroes/images/hero1.webp';
 
 const utilityIcons = [
-    { label: 'Account', icon: UserRound, href: '#account' },
+    { label: 'Account', icon: UserRound, href: '/login' },
     { label: 'Search', icon: Search, href: '#search' },
     { label: 'Cart', icon: ShoppingCart, href: '#cart' },
 ];
@@ -132,14 +132,25 @@ export default function Header() {
 
                     <div className="hidden items-center gap-1 md:flex">
                         {utilityIcons.map(({ label, icon: Icon, href }) => (
-                            <a
-                                key={label}
-                                href={href}
-                                aria-label={label}
-                                className="inline-flex size-11 items-center justify-center rounded-full text-zinc-950 transition-colors hover:bg-white/70 hover:text-zinc-700"
-                            >
-                                <Icon className="size-5" strokeWidth={1.75} />
-                            </a>
+                            href.startsWith('/') ? (
+                                <Link
+                                    key={label}
+                                    to={href}
+                                    aria-label={label}
+                                    className="inline-flex size-11 items-center justify-center rounded-full text-zinc-950 transition-colors hover:bg-white/70 hover:text-zinc-700"
+                                >
+                                    <Icon className="size-5" strokeWidth={1.75} />
+                                </Link>
+                            ) : (
+                                <a
+                                    key={label}
+                                    href={href}
+                                    aria-label={label}
+                                    className="inline-flex size-11 items-center justify-center rounded-full text-zinc-950 transition-colors hover:bg-white/70 hover:text-zinc-700"
+                                >
+                                    <Icon className="size-5" strokeWidth={1.75} />
+                                </a>
+                            )
                         ))}
                     </div>
 

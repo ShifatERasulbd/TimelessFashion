@@ -1,23 +1,46 @@
+import { Suspense, lazy } from 'react';
 
-import AboutHeroSection from '../components/AboutHeroSection.jsx';
-import Features from '../components/Features.jsx';
-import TimelessAboutSection from '../components/TimelessAboutSection.jsx';
-import OurStory from '../components/OurStory.jsx';
-import OurMission from '../components/OurMission.jsx';
-import TestimonialSection from '../components/TestimonialSection.jsx';
-import NewsletterSection from '../components/NewsletterSection.jsx';
-import InstagramSection from '../components/InstagramSection.jsx';
+import SectionSkeleton from '../components/SectionSkeleton.jsx';
+
+const AboutHeroSection = lazy(() => import('../components/AboutHeroSection.jsx'));
+const Features = lazy(() => import('../components/Features.jsx'));
+const TimelessAboutSection = lazy(() => import('../components/TimelessAboutSection.jsx'));
+const OurStory = lazy(() => import('../components/OurStory.jsx'));
+const OurMission = lazy(() => import('../components/OurMission.jsx'));
+const TestimonialSection = lazy(() => import('../components/TestimonialSection.jsx'));
+const NewsletterSection = lazy(() => import('../components/NewsletterSection.jsx'));
+const InstagramSection = lazy(() => import('../components/InstagramSection.jsx'));
+
+function LazySection({ children, heightClass }) {
+    return <Suspense fallback={<SectionSkeleton heightClass={heightClass} />}>{children}</Suspense>;
+}
 export default function AboutPage() {
     return (
         <div className="bg-white">
-            <AboutHeroSection />
-            <Features />
-            <TimelessAboutSection />
-            <OurStory />
-            <OurMission />
-            <TestimonialSection />
-            <NewsletterSection />
-            <InstagramSection />
+            <LazySection heightClass="h-[520px]">
+                <AboutHeroSection />
+            </LazySection>
+            <LazySection heightClass="h-[300px]">
+                <Features />
+            </LazySection>
+            <LazySection heightClass="h-[520px]">
+                <TimelessAboutSection />
+            </LazySection>
+            <LazySection heightClass="h-[520px]">
+                <OurStory />
+            </LazySection>
+            <LazySection heightClass="h-[540px]">
+                <OurMission />
+            </LazySection>
+            <LazySection heightClass="h-[420px]">
+                <TestimonialSection />
+            </LazySection>
+            <LazySection heightClass="h-[220px]">
+                <NewsletterSection />
+            </LazySection>
+            <LazySection heightClass="h-[320px]">
+                <InstagramSection />
+            </LazySection>
         </div>
     );
 }

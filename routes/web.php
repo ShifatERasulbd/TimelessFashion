@@ -28,6 +28,18 @@ Route::get('/about', function () {
     return view('home');
 });
 
+Route::get('/contact', function () {
+    return view('home');
+});
+
+Route::get('/login', function () {
+    return view('home');
+});
+
+Route::get('/register', function () {
+    return view('home');
+});
+
 Route::get('/admin', function () {
     return view('app');
 })->name('login');

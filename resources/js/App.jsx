@@ -1,13 +1,25 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
 
 import Header from './frontend/components/Header.jsx';
 import Footer from './frontend/components/Footer.jsx';
-import HomePage from './frontend/pages/HomePage.jsx';
-import ShopPage from './frontend/pages/ShopPage.jsx';
-import SingleProductPage from './frontend/pages/singleProduct.jsx';
-import AboutPage from './frontend/pages/about.jsx';
+import PageSkeleton from './frontend/components/PageSkeleton.jsx';
+
+const HomePage = lazy(() => import('./frontend/pages/HomePage.jsx'));
+const ShopPage = lazy(() => import('./frontend/pages/ShopPage.jsx'));
+const SingleProductPage = lazy(() => import('./frontend/pages/singleProduct.jsx'));
+const AboutPage = lazy(() => import('./frontend/pages/about.jsx'));
+const ContactPage = lazy(() => import('./frontend/pages/contact.jsx'));
+const AuthPage = lazy(() => import('./frontend/pages/Auth.jsx'));
+
+function withPageFallback(Component) {
+    return (
+        <Suspense fallback={<PageSkeleton />}>
+            <Component />
+        </Suspense>
+    );
+}
 
 function FrontendLayout() {
     return (
@@ -26,10 +38,13 @@ function AppRouter() {
         <BrowserRouter>
             <Routes>
                 <Route path="/" element={<FrontendLayout />}>
-                    <Route index element={<HomePage />} />
-                    <Route path="shop" element={<ShopPage />} />
-                    <Route path="singleProduct" element={<SingleProductPage />} />
-                    <Route path="about" element={<AboutPage />} />
+                    <Route index element={withPageFallback(HomePage)} />
+                    <Route path="shop" element={withPageFallback(ShopPage)} />
+                    <Route path="singleProduct" element={withPageFallback(SingleProductPage)} />
+                    <Route path="about" element={withPageFallback(AboutPage)} />
+                    <Route path="contact" element={withPageFallback(ContactPage)} />
+                    <Route path="login" element={withPageFallback(AuthPage)} />
+                    <Route path="register" element={withPageFallback(AuthPage)} />
                 </Route>
                 <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
