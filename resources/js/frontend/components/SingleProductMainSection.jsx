@@ -52,7 +52,7 @@ export default function SingleProductMainSection() {
 
     return (
         <section className={`${featuresFontClass} bg-white px-5 py-8 sm:px-8 lg:px-12 lg:py-10`}>
-            <div className="mx-auto w-full max-w-[1380px]">
+            <div className="mx-auto w-full max-w-[1520px]">
                 <p className="mb-4 text-[0.95rem] uppercase tracking-[0.08em] text-slate-600 sm:mb-6">
                     {breadcrumbs.map((crumb, index) => (
                         <span key={crumb.label}>
@@ -64,7 +64,7 @@ export default function SingleProductMainSection() {
                     ))}
                 </p>
 
-                <div className="grid items-start gap-6 xl:grid-cols-[0.93fr_1.07fr] xl:gap-9">
+                <div className="grid items-start gap-6 xl:grid-cols-[1.12fr_0.88fr] xl:gap-10">
                     <div className="self-start">
                         <SingleProductMediaGallery
                             images={productImages}

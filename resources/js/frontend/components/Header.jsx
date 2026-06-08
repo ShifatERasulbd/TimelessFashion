@@ -60,7 +60,7 @@ export default function Header() {
                                     {item.label}
                                 </Link>
 
-                                <div className="invisible fixed left-0 right-0 top-[90px] z-50 max-h-0 w-full overflow-hidden opacity-0 transition-[max-height,opacity] duration-300 ease-out group-hover:visible group-hover:max-h-[520px] group-hover:opacity-100">
+                                <div className="invisible fixed left-0 right-0 top-[78px] z-50 max-h-0 w-full overflow-hidden pt-3 opacity-0 transition-[max-height,opacity] duration-300 ease-out group-hover:visible group-hover:max-h-[540px] group-hover:opacity-100">
                                     <div className="border border-zinc-200 bg-white px-4 py-8 shadow-[0_18px_60px_rgba(0,0,0,0.08)] sm:px-6 lg:px-10">
                                         <div className="mx-auto grid w-full max-w-[1920px] grid-cols-[1.15fr_1.15fr_1.15fr_1.15fr_1.1fr] gap-8 xl:gap-10">
                                             {shopMegaMenuColumns.map((column) => (
