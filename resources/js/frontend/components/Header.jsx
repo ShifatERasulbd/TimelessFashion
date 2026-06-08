@@ -6,7 +6,7 @@ import { timelessFontClass } from '../../utils/typography';
 const navigationItems = [
     { label: 'Best Sellers', href: '#best-sellers' },
     { label: 'Shop', href: '/shop' },
-    { label: 'About', href: '#about' },
+    { label: 'About', href: '/about' },
     { label: 'Contact', href: '#contact' },
 ];
 
