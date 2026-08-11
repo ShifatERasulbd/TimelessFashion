@@ -1,4 +1,4 @@
-import { SlidersHorizontal } from 'lucide-react';
+import { Eye, Heart, SlidersHorizontal } from 'lucide-react';
 
 import { featuresFontClass } from '../../utils/typography';
 import ShopSidebar from './ShopSidebar.jsx';
@@ -6,42 +6,101 @@ import ShopSidebar from './ShopSidebar.jsx';
 const productImage = '/uploads/heroes/images/hero1.webp';
 
 const products = [
-    { id: 1, name: 'Corporate Signature Sweatshirt', price: '$68.00', tag: 'Best Seller', position: 'object-[45%_center]' },
-    { id: 2, name: 'Classic Team Hoodie', price: '$72.00', tag: 'New', position: 'object-[52%_center]' },
-    { id: 3, name: 'Performance Office Tee', price: '$44.00', tag: null, position: 'object-[58%_center]' },
-    { id: 4, name: 'Premium Embroidered Crewneck', price: '$82.00', tag: 'Popular', position: 'object-[62%_center]' },
-    { id: 5, name: 'Modern Fit Polo', price: '$54.00', tag: null, position: 'object-[49%_center]' },
-    { id: 6, name: 'Athletic Team Jersey', price: '$60.00', tag: null, position: 'object-[65%_center]' },
-    { id: 7, name: 'Corporate Essentials Zip Hoodie', price: '$76.00', tag: null, position: 'object-[54%_center]' },
-    { id: 8, name: 'Minimalist Staff Tee', price: '$39.00', tag: null, position: 'object-[47%_center]' },
+    {
+        id: 1,
+        name: 'REGULAR COVERALL',
+        price: '$95.00',
+        colors: ['#000000', '#2d6a4f', '#fefae0', '#1d3557', '#adb5bd'],
+        position: 'object-[42%_center]',
+    },
+    {
+        id: 2,
+        name: 'CORPORATE POLO T-SHIRT',
+        price: '$54.00',
+        colors: ['#000000', '#2d6a4f', '#fefae0', '#1d3557', '#adb5bd'],
+        position: 'object-[50%_center]',
+    },
+    {
+        id: 3,
+        name: 'FR WORK SHIRT',
+        price: '$56.00',
+        colors: ['#000000', '#2d6a4f', '#fefae0', '#1d3557', '#adb5bd'],
+        position: 'object-[58%_center]',
+    },
+    {
+        id: 4,
+        name: 'BASIC BIB APRON',
+        price: '$56.00',
+        colors: ['#000000', '#2d6a4f', '#fefae0', '#1d3557', '#adb5bd'],
+        position: 'object-[65%_center]',
+    },
+    {
+        id: 5,
+        name: 'CLASSIC TEAM HOODIE',
+        price: '$72.00',
+        colors: ['#000000', '#2d6a4f', '#fefae0', '#1d3557', '#adb5bd'],
+        position: 'object-[45%_center]',
+    },
+    {
+        id: 6,
+        name: 'ATHLETIC TEAM JERSEY',
+        price: '$60.00',
+        colors: ['#000000', '#2d6a4f', '#fefae0', '#1d3557', '#adb5bd'],
+        position: 'object-[55%_center]',
+    },
 ];
 
 function ProductCard({ product }) {
     return (
-        <article className="group overflow-hidden border border-zinc-200 bg-white">
-            <div className="relative overflow-hidden bg-zinc-100">
+        <article className="group flex flex-col bg-white">
+            <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F4F4F4]">
                 <img
                     src={productImage}
                     alt={product.name}
-                    className={`h-[250px] w-full object-cover ${product.position} transition-transform duration-500 group-hover:scale-105 sm:h-[320px]`}
+                    className={`h-full w-full object-cover ${product.position} transition-transform duration-500 group-hover:scale-105`}
                 />
 
-                {product.tag ? (
-                    <span className="absolute left-3 top-3 bg-zinc-950 px-2.5 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.18em] text-white">
-                        {product.tag}
-                    </span>
-                ) : null}
+                {/* Hover overlay actions (Add to Cart, Wishlist, Quick View) */}
+                <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <button
+                        type="button"
+                        className="bg-white px-4 py-2.5 text-[0.7rem] font-medium uppercase tracking-[0.15em] text-zinc-900 shadow-sm transition-colors hover:bg-zinc-900 hover:text-white"
+                    >
+                        Add to Cart
+                    </button>
+                    <button
+                        type="button"
+                        className="flex size-10 items-center justify-center bg-white text-zinc-900 shadow-sm transition-colors hover:bg-zinc-900 hover:text-white"
+                        aria-label="Wishlist"
+                    >
+                        <Heart className="size-4" strokeWidth={1.5} />
+                    </button>
+                    <button
+                        type="button"
+                        className="flex size-10 items-center justify-center bg-white text-zinc-900 shadow-sm transition-colors hover:bg-zinc-900 hover:text-white"
+                        aria-label="Quick view"
+                    >
+                        <Eye className="size-4" strokeWidth={1.5} />
+                    </button>
+                </div>
             </div>
 
-            <div className="space-y-2 p-4">
-                <h3 className="text-[1.05rem] font-medium leading-6 text-zinc-900">{product.name}</h3>
-                <p className="text-[0.95rem] uppercase tracking-[0.1em] text-zinc-600">{product.price}</p>
-                <button
-                    type="button"
-                    className="mt-2 inline-flex items-center justify-center border border-zinc-900 px-4 py-2 text-[0.7rem] font-semibold uppercase tracking-[0.16em] text-zinc-900 transition-colors hover:bg-zinc-900 hover:text-white"
-                >
-                    Add to cart
-                </button>
+            <div className="mt-4 flex flex-col space-y-1.5">
+                <h3 className="text-[0.95rem] font-normal tracking-[0.06em] text-zinc-900">{product.name}</h3>
+                <p className="text-[0.9rem] font-light text-zinc-600">{product.price}</p>
+                
+                <div className="mt-1 flex flex-col gap-1">
+                    <span className="text-[0.65rem] font-semibold uppercase tracking-[0.15em] text-zinc-400">Color</span>
+                    <div className="flex items-center gap-2">
+                        {product.colors.map((color, index) => (
+                            <span
+                                key={index}
+                                className="size-4 rounded-full border border-zinc-300 transition-transform hover:scale-110"
+                                style={{ backgroundColor: color }}
+                            />
+                        ))}
+                    </div>
+                </div>
             </div>
         </article>
     );
@@ -50,27 +109,27 @@ function ProductCard({ product }) {
 function ShopProductsGrid() {
     return (
         <div>
-            <div className="mb-5 flex flex-wrap items-center justify-between gap-3  py-4">
-                <p className="text-[0.88rem]  tracking-[0.07em] text-slate-600">
+            <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-4">
+                <p className="text-[0.88rem] tracking-[0.04em] text-zinc-600">
                     Showing 1-12 of 27 results
                 </p>
 
                 <button
                     type="button"
-                    className="inline-flex items-center gap-2 bg-zinc-950 px-3.5 py-2 text-[0.72rem] font-medium uppercase tracking-[0.14em] text-white"
+                    className="inline-flex items-center gap-2 bg-[#222222] px-4 py-2 text-[0.72rem] font-medium uppercase tracking-[0.14em] text-white transition-colors hover:bg-black"
                 >
-                    <SlidersHorizontal className="size-4" strokeWidth={1.7} />
                     Sort by
+                    <SlidersHorizontal className="size-3.5" strokeWidth={1.7} />
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 xl:grid-cols-4">
                 {products.map((product) => (
                     <ProductCard key={product.id} product={product} />
                 ))}
             </div>
 
-            <div className="mt-8 flex items-center justify-center gap-2">
+            <div className="mt-12 flex items-center justify-center gap-2">
                 {[1, 2, 3].map((page) => (
                     <button
                         key={page}
@@ -91,8 +150,8 @@ function ShopProductsGrid() {
 
 export default function ShopCatalogSection() {
     return (
-        <section className={`${featuresFontClass} px-5 py-12 sm:px-8 lg:px-12 lg:py-16`}>
-            <div className="mx-auto grid w-full max-w-[1480px] gap-8 lg:grid-cols-[280px_1fr] lg:gap-10">
+        <section className={`${featuresFontClass} bg-white px-5 py-12 sm:px-8 lg:px-12 lg:py-16`}>
+            <div className="mx-auto grid w-full max-w-[1700px] gap-8 lg:grid-cols-[280px_1fr] lg:gap-12">
                 <ShopSidebar />
                 <ShopProductsGrid />
             </div>

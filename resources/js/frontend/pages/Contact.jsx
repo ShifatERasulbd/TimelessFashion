@@ -6,8 +6,7 @@ const ContactHeroSection = lazy(() => import('../components/ContactHeroSection.j
 const Features = lazy(() => import('../components/Features.jsx'));
 const ContactSection = lazy(() => import('../components/ContactSection.jsx'));
 const ContactLocationMapSection = lazy(() => import('../components/ContactLocationMapSection.jsx'));
-const NewsletterSection = lazy(() => import('../components/NewsletterSection.jsx'));
-const InstagramSection = lazy(() => import('../components/InstagramSection.jsx'));
+
 
 function LazySection({ children, heightClass, className }) {
     return <Suspense fallback={<SectionSkeleton heightClass={heightClass} className={className} />}>{children}</Suspense>;
@@ -28,12 +27,7 @@ export default function ContactPage() {
             <LazySection heightClass="h-[520px]" className="px-0">
                 <ContactLocationMapSection />
             </LazySection>
-            <LazySection heightClass="h-[220px]">
-                <NewsletterSection />
-            </LazySection>
-            <LazySection heightClass="h-[320px]">
-                <InstagramSection />
-            </LazySection>
+          
         </>
     );
 }

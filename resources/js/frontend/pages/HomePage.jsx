@@ -6,11 +6,8 @@ const Hero = lazy(() => import('../components/Hero.jsx'));
 const Features = lazy(() => import('../components/Features.jsx'));
 const ShopByEvent = lazy(() => import('../components/ShopByEvent.jsx'));
 const Customizer = lazy(() => import('../components/Customizer.jsx'));
-const NewArrivals = lazy(() => import('../components/NewArrivals.jsx'));
-const BestSellingProducts = lazy(() => import('../components/BestSellingProducts.jsx'));
-const HomeAbout = lazy(() => import('../components/HomeAbout.jsx'));
-const NewsletterSection = lazy(() => import('../components/NewsletterSection.jsx'));
-const InstagramSection = lazy(() => import('../components/InstagramSection.jsx'));
+const HowWeHelp = lazy(() => import('../components/HowWeHelp.jsx'));
+const ShopByProduct = lazy(() => import('../components/ShopByProduct.jsx'));
 
 function LazySection({ children, heightClass }) {
     return <Suspense fallback={<SectionSkeleton heightClass={heightClass} />}>{children}</Suspense>;
@@ -28,24 +25,16 @@ export default function HomePage() {
             <LazySection heightClass="h-[420px]">
                 <ShopByEvent />
             </LazySection>
+            <LazySection heightClass="h-[420px]">
+                <HowWeHelp />
+            </LazySection>
+            <LazySection heightClass="h-[420px]">
+                <ShopByProduct />
+            </LazySection>
             <LazySection heightClass="h-[520px]">
                 <Customizer />
             </LazySection>
-            <LazySection heightClass="h-[620px]">
-                <NewArrivals />
-            </LazySection>
-            <LazySection heightClass="h-[540px]">
-                <BestSellingProducts />
-            </LazySection>
-            <LazySection heightClass="h-[420px]">
-                <HomeAbout />
-            </LazySection>
-            <LazySection heightClass="h-[220px]">
-                <NewsletterSection />
-            </LazySection>
-            <LazySection heightClass="h-[320px]">
-                <InstagramSection />
-            </LazySection>
+            
         </>
     );
 }

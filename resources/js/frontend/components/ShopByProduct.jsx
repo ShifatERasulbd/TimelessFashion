@@ -1,39 +1,37 @@
 import { Link } from 'react-router-dom';
-
 import { featuresFontClass } from '../../utils/typography';
 
-// Updated image path for the new banner design
-const bannerImage = '/uploads/heroes/images/industry-banner.webp';
+const sampleImage = '/uploads/heroes/images/hero1.webp';
 
-const industryCards = [
+const productCards = [
     {
-        title: 'Uniforms & Sports Event',
-        image: bannerImage, // Assuming this is a single composite image, otherwise you'd map individual images
-        imagePosition: 'object-[10%_center]',
+        title: 'T-SHIRT',
+        image: sampleImage,
+        imagePosition: 'object-[20%_center]',
     },
     {
-        title: 'Country Clubs',
-        image: bannerImage,
-        imagePosition: 'object-[30%_center]',
+        title: 'POLOS',
+        image: sampleImage,
+        imagePosition: 'object-[40%_center]',
     },
     {
-        title: 'Hospitality',
-        image: bannerImage,
-        imagePosition: 'object-[50%_center]',
+        title: 'HOODIES',
+        image: sampleImage,
+        imagePosition: 'object-[60%_center]',
     },
     {
-        title: 'Corporate',
-        image: bannerImage,
-        imagePosition: 'object-[70%_center]',
+        title: 'SPORTSWEAR',
+        image: sampleImage,
+        imagePosition: 'object-[80%_center]',
     },
     {
-        title: 'Industrial',
-        image: bannerImage,
-        imagePosition: 'object-[90%_center]',
+        title: 'OUTERWEAR WORKWEAR',
+        image: sampleImage,
+        imagePosition: 'object-[95%_center]',
     },
 ];
 
-function IndustryCard({ title, image, imagePosition }) {
+function ProductCard({ title, image, imagePosition }) {
     return (
         <article className="group relative aspect-[3/5] w-full overflow-hidden bg-zinc-200">
             <img
@@ -41,12 +39,12 @@ function IndustryCard({ title, image, imagePosition }) {
                 alt={title}
                 className={`h-full w-full object-cover ${imagePosition} transition-transform duration-500 group-hover:scale-105`}
             />
-            {/* Dark gradient overlay for better text contrast */}
+            {/* Gradient overlay for readability */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 
-            {/* Centered text overlay, as requested */}
-            <div className="absolute inset-x-0 bottom-1/4 z-10 px-6 text-center">
-                <h3 className="text-[2rem] font-normal uppercase leading-snug tracking-[0.04em] text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.5)] sm:text-[1.4rem]">
+            {/* Title overlay */}
+            <div className="absolute inset-x-0 bottom-1/4 z-10 px-4 text-center">
+                <h3 className="text-[1.8rem] font-normal uppercase tracking-[0.06em] text-white [text-shadow:0_2px_4px_rgba(0,0,0,0.5)] sm:text-[1.6rem]">
                     {title}
                 </h3>
             </div>
@@ -54,15 +52,15 @@ function IndustryCard({ title, image, imagePosition }) {
     );
 }
 
-export default function ShopByIndustry() {
+export default function ShopByProduct() {
     return (
         <section className={`${featuresFontClass} bg-[#F9F9F8] py-14 sm:py-20`}>
             <div className="mx-auto w-full max-w-[1700px] px-6 sm:px-8 lg:px-12">
-                {/* Header section with title and "View All" link aligned */}
+                {/* Header Layout */}
                 <div className="mb-10 flex flex-col gap-4 sm:mb-12 sm:flex-row sm:items-start sm:justify-between">
                     <div>
                         <h2 className="text-[2.7rem] font-light uppercase leading-none tracking-[0.04em] text-zinc-900 sm:text-[3rem]">
-                            Shop By Industry
+                            Shop By Product
                         </h2>
                         <p className="mt-3 text-[1rem] leading-7 text-zinc-700 sm:text-[1.1rem]">
                             Top picks loved for their comfort, quality, and timeless style.
@@ -77,10 +75,10 @@ export default function ShopByIndustry() {
                     </Link>
                 </div>
 
-                {/* The 5-column grid layout */}
+                {/* 5-Column Grid */}
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5 lg:gap-0.5">
-                    {industryCards.map((card, index) => (
-                        <IndustryCard key={index} {...card} />
+                    {productCards.map((card, index) => (
+                        <ProductCard key={index} {...card} />
                     ))}
                 </div>
             </div>

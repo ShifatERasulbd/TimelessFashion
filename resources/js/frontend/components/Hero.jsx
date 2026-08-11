@@ -1,5 +1,4 @@
-import { ArrowLeft, ArrowRight } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { timelessFontClass } from '../../utils/typography';
 import {
@@ -8,9 +7,9 @@ import {
 } from '../../utils/heroTypography';
 
 const defaultHeroData = {
-    title: 'Custom apparel solutions',
+    title: 'Brands for teams',
     description:
-        'Elevate your brand with premium customized apparel designed for teams, events, corporate identity, and professional wear.',
+        'Discover premium apparel and uniform brands, customized with your logo and tailored to reflect your team\'s identity, style, and professionalism.',
     image_url: '/uploads/heroes/images/hero1.webp',
     video_url: null,
     title_font_size: 124,
@@ -18,23 +17,6 @@ const defaultHeroData = {
     description_font_size: 24,
     description_font_family: 'instrument-sans',
 };
-
-function splitHeroTitle(value) {
-    const title = String(value || '').trim();
-
-    if (!title) {
-        return ['Custom apparel', 'solutions'];
-    }
-
-    const words = title.split(/\s+/);
-
-    if (words.length <= 2) {
-        return [title];
-    }
-
-    const middle = Math.ceil(words.length / 2);
-    return [words.slice(0, middle).join(' '), words.slice(middle).join(' ')];
-}
 
 export default function Hero() {
     const [heroData, setHeroData] = useState(defaultHeroData);
@@ -68,102 +50,83 @@ export default function Hero() {
         };
     }, []);
 
-    const titleLines = useMemo(() => splitHeroTitle(heroData.title), [heroData.title]);
-    const heroImage = heroData.image_url || defaultHeroData.image_url;
-    const titleSize = resolveHeroFontSize(heroData.title_font_size, 124);
-    const descriptionSize = resolveHeroFontSize(heroData.description_font_size, 24);
     const titleFamily = resolveHeroFontFamily(heroData.title_font_family, 'instrument-sans');
     const descriptionFamily = resolveHeroFontFamily(
         heroData.description_font_family,
         'instrument-sans'
     );
-    const displayTitleSize = Math.max(52, Math.round(titleSize * 0.58));
-    const displayDescriptionSize = Math.max(16, Math.round(descriptionSize * 0.72));
 
     return (
-        <section className={`${timelessFontClass} relative isolate min-h-[calc(100vh-90px)] overflow-hidden bg-zinc-950 text-white`}>
-            {heroData.video_url ? (
-                <video
-                    src={heroData.video_url}
-                    className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                />
-            ) : (
-                <img
-                    src={heroImage}
-                    alt="Timeless custom apparel hero"
-                    className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
-                />
-            )}
-
-            <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_30%_35%,rgba(28,28,28,0.18),rgba(0,0,0,0.72)_55%,rgba(0,0,0,0.92)_100%)]" />
-            <div className="absolute inset-0 -z-10 bg-black/20" />
-
-            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/35 to-transparent" />
-
-            <div className="mx-auto flex min-h-[calc(100vh-90px)] w-full max-w-[1920px] items-center px-5 py-10 sm:px-8 lg:px-12">
-                <div className="relative flex w-full items-center">
-                    <button
-                        type="button"
-                        aria-label="Previous slide"
-                        className="absolute left-2 top-1/2 hidden size-24 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white/90 backdrop-blur-sm transition-colors hover:border-white/35 hover:bg-white/10 md:inline-flex lg:left-4 lg:size-28"
-                    >
-                        <ArrowLeft className="size-10" strokeWidth={1.6} />
-                    </button>
-
-                    <div className="w-full pl-0 md:pl-24 lg:pl-32 xl:pl-40">
-                        <div className="w-full max-w-[min(60vw,760px)] space-y-5 bg-black/18 p-4 backdrop-blur-[2px] sm:bg-transparent sm:p-0">
-                            <h1
-                                className="max-w-3xl font-light uppercase leading-[0.9] tracking-[-0.045em] text-white drop-shadow-[0_6px_26px_rgba(0,0,0,0.35)]"
-                                style={{
-                                    fontFamily: titleFamily,
-                                    fontSize: `clamp(2.1rem, 5.4vw, ${displayTitleSize}px)`,
-                                }}
-                            >
-                                {titleLines.map((line, index) => (
-                                    <span key={`${line}-${index}`} className="block">
-                                        {line}
-                                    </span>
-                                ))}
-                            </h1>
-
-                            <p
-                                className="max-w-[680px] leading-7 text-white/82"
-                                style={{
-                                    fontFamily: descriptionFamily,
-                                    fontSize: `clamp(0.95rem, 1.45vw, ${displayDescriptionSize}px)`,
-                                }}
-                            >
-                                {heroData.description || defaultHeroData.description}
-                            </p>
-
-                            <a
-                                href="#shop"
-                                className="inline-flex items-center justify-center rounded-sm bg-white px-7 py-4 text-[0.78rem] font-medium uppercase tracking-[0.22em] text-zinc-950 transition-transform hover:-translate-y-0.5 hover:bg-zinc-100"
-                            >
-                                Shop collection
-                            </a>
-
-                            <div className="pointer-events-none flex justify-start pt-1">
-                                <div className="flex items-center gap-2 rounded-full border border-white/15 bg-black/20 px-3 py-2 backdrop-blur-sm">
-                                    <span className="size-2 rounded-full bg-white" />
-                                    <span className="size-2 rounded-full bg-white/40" />
-                                    <span className="size-2 rounded-full bg-white/40" />
-                                </div>
-                            </div>
+        <section className={`${timelessFontClass} relative isolate min-h-[520px] overflow-hidden bg-[#d9e5e0] text-zinc-950 lg:min-h-[600px]`}>
+            <div className="mx-auto flex min-h-[520px] w-full max-w-[1920px] items-center px-6 py-16 sm:px-10 lg:min-h-[600px] lg:px-16">
+                <div className="grid w-full grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8">
+                    
+                    {/* Left Column: Content */}
+                    <div className="flex flex-col items-start space-y-6 lg:col-span-5">
+                        {/* Tag Pill */}
+                        <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1.5 shadow-sm">
+                            <span className="size-1.5 rounded-full bg-zinc-900" />
+                            <span className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-zinc-900">
+                                Premium Apparel Brands
+                            </span>
                         </div>
+
+                        {/* Title */}
+                        <h1
+                            className="text-4xl font-normal tracking-tight text-zinc-950 sm:text-5xl lg:text-6xl"
+                            style={{ fontFamily: titleFamily }}
+                        >
+                            Brands for <span className="font-serif italic text-zinc-900 underline decoration-[#e65c00] decoration-2 underline-offset-8">teams</span>
+                        </h1>
+
+                        {/* Description */}
+                        <p
+                            className="max-w-[540px] text-[0.95rem] leading-relaxed text-zinc-600 sm:text-base"
+                            style={{ fontFamily: descriptionFamily }}
+                        >
+                            {heroData.description || defaultHeroData.description}
+                        </p>
+
+                        {/* CTA Button */}
+                        <a
+                            href="#shop"
+                            className="inline-flex items-center justify-center rounded-sm bg-[#e65c00] px-7 py-3.5 text-[0.78rem] font-semibold uppercase tracking-[0.2em] text-white transition-all hover:bg-[#d55400]"
+                        >
+                            Discover More
+                        </a>
                     </div>
 
-                    <button
-                        type="button"
-                        aria-label="Next slide"
-                        className="absolute right-2 top-1/2 hidden size-24 -translate-y-1/2 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white/90 backdrop-blur-sm transition-colors hover:border-white/35 hover:bg-white/10 md:inline-flex lg:right-4 lg:size-28"
-                    >
-                        <ArrowRight className="size-10" strokeWidth={1.6} />
-                    </button>
+                    {/* Right Column: Floating Brand Logo Badges (Exact match to target reference layout) */}
+                    <div className="relative flex h-[360px] w-full items-center justify-center lg:col-span-7 lg:h-[440px]">
+                        
+                        {/* Badge 1: Timeless Sticker (Upper-mid area) */}
+                        <div className="absolute right-[42%] top-[24%] rotate-[-4deg] rounded-sm bg-white p-3 shadow-[0_10px_30px_rgba(0,0,0,0.06)] transition-transform hover:rotate-0">
+                            <div className="flex items-center bg-[#fcead8] px-4 py-2 font-black tracking-wider text-zinc-900">
+                                <span className="text-xl">TIME</span>
+                                <span className="font-serif italic font-normal lowercase text-[#e65c00] text-lg">less</span>
+                            </div>
+                        </div>
+
+                        {/* Badge 2: 1971Co. Sticker (Mid-right area) */}
+                        <div className="absolute right-[14%] top-[42%] rotate-[6deg] rounded-sm bg-white px-5 py-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.06)] transition-transform hover:rotate-0">
+                            <span className="text-2xl font-black italic tracking-tighter text-zinc-950">
+                                1971<span className="text-sm font-sans not-italic font-normal">Co.</span>
+                            </span>
+                        </div>
+
+                        {/* Badge 3: Chef Works Sticker (Lower-mid area) */}
+                        <div className="absolute bottom-[16%] right-[44%] rotate-[-2deg] rounded-sm bg-white px-6 py-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.06)] transition-transform hover:rotate-0">
+                            <div className="flex items-center gap-2">
+                                <div className="flex size-7 items-center justify-center rounded-full bg-[#cc0000] text-white">
+                                    <span className="text-xs">🍴</span>
+                                </div>
+                                <span className="font-serif text-xl tracking-tight text-zinc-900">
+                                    Chef<span className="font-sans font-bold text-[#cc0000]">Works</span>
+                                </span>
+                            </div>
+                        </div>
+
+                    </div>
 
                 </div>
             </div>
