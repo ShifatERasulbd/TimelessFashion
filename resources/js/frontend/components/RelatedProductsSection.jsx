@@ -87,7 +87,7 @@ export default function RelatedProductsSection() {
                 <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                     <div>
                         <h2 className="font-serif text-[1.8rem] uppercase tracking-wide text-zinc-900 sm:text-[2.2rem]">
-                            Related Products
+                            You May Also Like
                         </h2>
                         <p className="mt-2 text-xs text-zinc-500 sm:text-sm">
                             Top picks loved for their comfort, quality, and timeless style.

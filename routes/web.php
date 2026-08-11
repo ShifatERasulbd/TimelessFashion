@@ -23,6 +23,18 @@ Route::get('/singleProduct', function () {
     return view('home');
 });
 
+Route::get('/singleProduct/{productId}', function () {
+    return view('home');
+})->whereNumber('productId');
+
+Route::get('/cart', function () {
+    return view('home');
+});
+
+Route::get('/checkout', function () {
+    return view('home');
+});
+
 
 Route::get('/about', function () {
     return view('home');

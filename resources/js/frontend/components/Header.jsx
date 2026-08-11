@@ -34,7 +34,7 @@ const shopMegaMenuImage = '/uploads/heroes/images/hero1.webp';
 const utilityIcons = [
     { label: 'Account', icon: UserRound, href: '/login' },
     { label: 'Search', icon: Search, href: '#search' },
-    { label: 'Cart', icon: ShoppingCart, href: '#cart' },
+    { label: 'Cart', icon: ShoppingCart, href: '/cart' },
 ];
 
 export default function Header() {

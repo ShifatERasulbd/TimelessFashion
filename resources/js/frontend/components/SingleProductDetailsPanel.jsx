@@ -22,6 +22,9 @@ export default function SingleProductDetailsPanel({
     quantity,
     onDecreaseQuantity,
     onIncreaseQuantity,
+    onAddToCart,
+    onBuyNow,
+    cartNotice,
 }) {
     return (
         <div>
@@ -112,6 +115,7 @@ export default function SingleProductDetailsPanel({
 
                     <button
                         type="button"
+                        onClick={onAddToCart}
                         className="inline-flex h-[52px] flex-1 min-w-[240px] cursor-pointer items-center justify-center bg-zinc-900 px-6 text-[1.2rem] font-semibold uppercase tracking-[0.05em] text-white shadow-sm transition-all duration-200 hover:bg-black hover:shadow-md active:translate-y-px focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900 focus-visible:ring-offset-2"
                     >
                         Add To Cart
@@ -129,6 +133,7 @@ export default function SingleProductDetailsPanel({
                 <div className="flex flex-wrap items-center gap-2.5">
                     <button
                         type="button"
+                        onClick={onBuyNow}
                         className="inline-flex h-[50px] flex-1 min-w-[220px] items-center justify-center bg-black text-[1.05rem] font-medium text-white"
                     >
                         Buy Now
@@ -143,6 +148,9 @@ export default function SingleProductDetailsPanel({
                 </div>
 
                 <p className="border-t border-zinc-200 pt-2.5 text-[0.98rem] text-zinc-500">SKU: N/A</p>
+                {cartNotice ? (
+                    <p className="text-[0.9rem] font-medium text-emerald-700">{cartNotice}</p>
+                ) : null}
             </div>
         </div>
     );

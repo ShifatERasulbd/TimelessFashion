@@ -27,7 +27,7 @@ const featureItems = [
 
 export default function Features() {
     return (
-        <section className={`${featuresFontClass} bg-[#F9F9F8] py-16 sm:py-20`}>
+        <section className={`${featuresFontClass} bg-[#F9F9F8] py-5 sm:py-5`}>
             <div className="mx-auto w-full max-w-[1700px] px-6 sm:px-8 lg:px-12">
                 <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 xl:grid-cols-4 xl:gap-8">
                     {featureItems.map(({ icon: Icon, title, description }) => (

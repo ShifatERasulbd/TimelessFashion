@@ -1,4 +1,5 @@
 import { Eye, Heart, SlidersHorizontal } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 import { featuresFontClass } from '../../utils/typography';
 import ShopSidebar from './ShopSidebar.jsx';
@@ -54,11 +55,13 @@ function ProductCard({ product }) {
     return (
         <article className="group flex flex-col bg-white">
             <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#F4F4F4]">
-                <img
-                    src={productImage}
-                    alt={product.name}
-                    className={`h-full w-full object-cover ${product.position} transition-transform duration-500 group-hover:scale-105`}
-                />
+                <Link to={`/singleProduct/${product.id}`} aria-label={`Open ${product.name} details`}>
+                    <img
+                        src={productImage}
+                        alt={product.name}
+                        className={`h-full w-full object-cover ${product.position} transition-transform duration-500 group-hover:scale-105`}
+                    />
+                </Link>
 
                 {/* Hover overlay actions (Add to Cart, Wishlist, Quick View) */}
                 <div className="absolute inset-x-0 bottom-4 flex items-center justify-center gap-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
@@ -86,7 +89,12 @@ function ProductCard({ product }) {
             </div>
 
             <div className="mt-4 flex flex-col space-y-1.5">
-                <h3 className="text-[0.95rem] font-normal tracking-[0.06em] text-zinc-900">{product.name}</h3>
+                <Link
+                    to={`/singleProduct/${product.id}`}
+                    className="text-[0.95rem] font-normal tracking-[0.06em] text-zinc-900 transition-colors hover:text-zinc-600"
+                >
+                    {product.name}
+                </Link>
                 <p className="text-[0.9rem] font-light text-zinc-600">{product.price}</p>
                 
                 <div className="mt-1 flex flex-col gap-1">
