@@ -7,6 +7,8 @@ use App\Http\Controllers\FeaturesController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CanadaWarehouseStockController;
 use App\Http\Controllers\ApiProductController;
+use App\Http\Controllers\HowWeHelpController;
+use App\Http\Controllers\ShopByProductController;
 use App\Http\Controllers\ShopByIndustryController;
 use App\Http\Controllers\SubCategoryController;
 use Illuminate\Http\Request;
@@ -65,6 +67,8 @@ Route::prefix('api')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
     Route::get('/public/hero', [HeroController::class, 'publicHero']);
     Route::get('/public/features', [FeaturesController::class, 'publicIndex']);
+    Route::get('/public/how-we-help', [HowWeHelpController::class, 'publicShow']);
+    Route::get('/public/shop-by-product', [ShopByProductController::class, 'publicShow']);
     Route::get('/public/shop-by-industry', [ShopByIndustryController::class, 'publicShow']);
     Route::post('/personalizations', [PersonalizationController::class, 'store']);
     Route::patch('/personalizations/{personalization}/confirm', [PersonalizationController::class, 'confirm']);
@@ -102,6 +106,22 @@ Route::prefix('api')->group(function () {
         Route::put('/shop-by-industry/items/{item}', [ShopByIndustryController::class, 'updateItem']);
         Route::delete('/shop-by-industry/items/{item}', [ShopByIndustryController::class, 'destroyItem']);
 
+        // How We Help section + repeater items
+        Route::get('/how-we-help', [HowWeHelpController::class, 'show']);
+        Route::put('/how-we-help', [HowWeHelpController::class, 'updateSection']);
+        Route::post('/how-we-help/items', [HowWeHelpController::class, 'storeItem']);
+        Route::put('/how-we-help/items/{item}', [HowWeHelpController::class, 'updateItem']);
+        Route::delete('/how-we-help/items/{item}', [HowWeHelpController::class, 'destroyItem']);
+
+
+        // Shop By Product section + repeater items
+        Route::get('/shop-by-product', [ShopByProductController::class, 'show']);
+        Route::put('/shop-by-product', [ShopByProductController::class, 'updateSection']);
+        Route::post('/shop-by-product/items', [ShopByProductController::class, 'storeItem']);
+        Route::put('/shop-by-product/items/{item}', [ShopByProductController::class, 'updateItem']);
+        Route::delete('/shop-by-product/items/{item}', [ShopByProductController::class, 'destroyItem']);
+
+        
         // Inventory public API proxy (Canada warehouse)
         Route::get('/inventory/canada-warehouse-stocks', [CanadaWarehouseStockController::class, 'index']);
 

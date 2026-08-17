@@ -28,6 +28,13 @@ import { useAppContext } from '@/context/AppContext';
 import { createFeature, deleteFeature, fetchFeatures, updateFeature } from '../Features/api';
 import { createHero, fetchHeroes, updateHero } from '../Hero/api';
 import {
+    createHowWeHelpItem,
+    deleteHowWeHelpItem,
+    fetchHowWeHelp,
+    updateHowWeHelpItem,
+    updateHowWeHelpSection,
+} from './howWeHelpApi.js';
+import {
     createShopByIndustryItem,
     deleteShopByIndustryItem,
     fetchShopByIndustry,
@@ -35,7 +42,13 @@ import {
     updateShopByIndustrySection,
 } from './shopbyeventApi.js';
 import { homePageSections } from '../../../frontend/pages/HomePage.jsx';
-
+import {
+    createShopByProductItem,
+    deleteShopByProductItem,
+    fetchShopByProduct,
+    updateShopByProductItem,
+    updateShopByProductSection,
+} from './shpByProductAPI.js';
 const defaultHeroForm = {
     title: '',
     ticker_text: '',
@@ -99,6 +112,43 @@ function toIndustryItem(item, index) {
     };
 }
 
+function normalizeHowWeHelpItems(list = []) {
+    return list.map((item, index) => ({
+        ...item,
+        sort_order: index + 1,
+    }));
+}
+
+function toHowWeHelpItem(item, index) {
+    return {
+        key: `existing-help-${item.id}`,
+        id: item.id,
+        title: item.title || '',
+        description: item.description || '',
+        image_url: item.image_url || null,
+        imageFile: null,
+        sort_order: index + 1,
+    };
+}
+
+
+function normalizeShopByProductItems(list = []) {
+    return list.map((item, index) => ({
+        ...item,
+        sort_order: index + 1,
+    }));
+}
+
+function toShopByProductItem(item, index) {
+    return {
+        key: `existing-product-${item.id}`,
+        id: item.id,
+        title: item.title || '',
+        image_url: item.image_url || null,
+        imageFile: null,
+        sort_order: index + 1,
+    };
+}
 export default function HomePageBuilder() {
     const { setPageTitle } = useAppContext();
 
@@ -128,6 +178,18 @@ export default function HomePageBuilder() {
     const [removedIndustryItemIds, setRemovedIndustryItemIds] = useState([]);
     const [draggedIndustryKey, setDraggedIndustryKey] = useState(null);
 
+    const [isLoadingHowWeHelp, setIsLoadingHowWeHelp] = useState(false);
+    const [howWeHelpForm, setHowWeHelpForm] = useState({ title: '', description: '' });
+    const [howWeHelpItems, setHowWeHelpItems] = useState([]);
+    const [removedHowWeHelpItemIds, setRemovedHowWeHelpItemIds] = useState([]);
+    const [draggedHowWeHelpKey, setDraggedHowWeHelpKey] = useState(null);
+
+
+    const [isLoadingShopByProduct, setIsLoadingShopByProduct] = useState(false);
+    const [shopByProductForm, setShopByProductForm] = useState({ title: '', subtitle: '' });
+    const [shopByProductItems, setShopByProductItems] = useState([]);
+    const [removedShopByProductItemIds, setRemovedShopByProductItemIds] = useState([]);
+    const [draggedShopByProductKey, setDraggedShopByProductKey] = useState(null);
     useEffect(() => {
         setPageTitle('Home Page Builder');
     }, [setPageTitle]);
@@ -148,6 +210,14 @@ export default function HomePageBuilder() {
 
         if (sectionId === 'shop-by-event') {
             return 'home-shop-by-industry-section';
+        }
+
+        if (sectionId === 'how-we-help') {
+            return 'home-how-we-help-section';
+        }
+
+        if (sectionId === 'shop-by-product') {
+            return 'home-shop-by-product-section';
         }
 
         return null;
@@ -248,7 +318,49 @@ export default function HomePageBuilder() {
         }
     }
 
-    async function openEditor(editorType) {
+    async function loadHowWeHelpForEditor() {
+        setIsLoadingHowWeHelp(true);
+
+        try {
+            const payload = await fetchHowWeHelp();
+            setHowWeHelpForm({
+                title: payload?.title || '',
+                description: payload?.description || '',
+            });
+            setHowWeHelpItems(
+                (Array.isArray(payload?.items) ? payload.items : []).map((item, index) =>
+                    toHowWeHelpItem(item, index)
+                )
+            );
+            setRemovedHowWeHelpItemIds([]);
+        } catch (error) {
+            toast.error(error.message || 'Failed to load How We Help section.');
+        } finally {
+            setIsLoadingHowWeHelp(false);
+        }
+    }
+
+    async function loadShopByProductForEditor() {
+        setIsLoadingShopByProduct(true);
+        try {
+            const payload = await fetchShopByProduct();
+            setShopByProductForm({
+                title: payload?.title || '',
+                subtitle: payload?.subtitle || '',
+            });
+
+            const mapped = (Array.isArray(payload?.items) ? payload.items : []).map((item, index) =>
+                toShopByProductItem(item, index)
+            );
+            setShopByProductItems(mapped);
+            setRemovedShopByProductItemIds([]);
+        } catch (error) {
+            toast.error(error.message || 'Failed to load shop by product section.');
+        } finally {
+            setIsLoadingShopByProduct(false);
+        }
+    }
+        async function openEditor(editorType) {
         setActiveEditor(editorType);
         setIsDrawerOpen(true);
 
@@ -262,6 +374,14 @@ export default function HomePageBuilder() {
 
         if (editorType === 'shop-by-event') {
             await loadShopByIndustryForEditor();
+        }
+
+        if (editorType === 'how-we-help') {
+            await loadHowWeHelpForEditor();
+        }
+
+        if (editorType === 'shop-by-product') {
+            await loadShopByProductForEditor();
         }
     }
 
@@ -280,6 +400,16 @@ export default function HomePageBuilder() {
 
         if (sectionId === 'shop-by-event') {
             openEditor('shop-by-event');
+            return;
+        }
+
+        if (sectionId === 'how-we-help') {
+            openEditor('how-we-help');
+            return;
+        }
+
+        if (sectionId === 'shop-by-product') {
+            openEditor('shop-by-product');
             return;
         }
 
@@ -519,6 +649,180 @@ export default function HomePageBuilder() {
         setDraggedIndustryKey(null);
     }
 
+    function addShopByProductItem() {
+        const key = `new-product-${Date.now()}`;
+        setShopByProductItems((previous) =>
+            normalizeShopByProductItems([
+                ...previous,
+                {
+                    key,
+                    id: null,
+                    title: '',
+                    image_url: null,
+                    imageFile: null,
+                    sort_order: 0,
+                },
+            ])
+        );
+    }
+
+    function handleShopByProductFieldChange(itemKey, field, value) {
+        setShopByProductItems((previous) =>
+            previous.map((item) =>
+                item.key === itemKey ? { ...item, [field]: value } : item
+
+
+            )
+        );
+    }
+
+
+    function handleShopByProductImageChange(itemKey, file) {
+        if (!file) {
+            return;
+        }
+        setShopByProductItems((previous) =>
+            previous.map((item) => {
+                if (item.key !== itemKey) {
+                    return item;
+                }
+
+                if (item.image_url?.startsWith('blob:')) {
+                    URL.revokeObjectURL(item.image_url);
+                }
+                return {
+                    ...item,
+                    imageFile: file,
+                    image_url: URL.createObjectURL(file),
+                };
+            })
+        );
+    }
+
+    function removeShopByProductItem(itemKey) {
+        setShopByProductItems((previous) => {
+            const item = previous.find((entry) => entry.key === itemKey);
+            if (item?.id) {
+                setRemovedShopByProductItemIds((ids) => [...ids, item.id]);
+            }
+
+            if (item?.image_url?.startsWith('blob:')) {
+                URL.revokeObjectURL(item.image_url);
+            }
+
+            return normalizeShopByProductItems(previous.filter((entry) => entry.key !== itemKey));
+        });
+    }
+
+    function handleShopByProductDrop(targetKey) {
+        if (!draggedShopByProductKey || draggedShopByProductKey === targetKey) {
+            return;
+        }
+
+        setShopByProductItems((previous) => {
+
+            const next = [...previous];
+            const draggedIndex = next.findIndex((item) => item.key === draggedShopByProductKey);
+            const targetIndex = next.findIndex((item) => item.key === targetKey);
+            if (draggedIndex < 0 || targetIndex < 0) {
+                return previous;
+            }
+            const [moved] = next.splice(draggedIndex, 1);
+            next.splice(targetIndex, 0, moved);
+            return normalizeShopByProductItems(next);
+        });
+
+        setDraggedShopByProductKey(null);
+    }
+
+    function addHowWeHelpItem() {
+        const key = `new-help-${Date.now()}`;
+        setHowWeHelpItems((previous) =>
+            normalizeHowWeHelpItems([
+                ...previous,
+                {
+                    key,
+                    id: null,
+                    title: '',
+                    description: '',
+                    image_url: null,
+                    imageFile: null,
+                },
+            ])
+        );
+    }
+
+    function handleHowWeHelpFieldChange(itemKey, field, value) {
+        setHowWeHelpItems((previous) =>
+            previous.map((item) =>
+                item.key === itemKey ? { ...item, [field]: value } : item
+            )
+        );
+    }
+
+    function handleHowWeHelpImageChange(itemKey, file) {
+        if (!file) {
+            return;
+        }
+
+        setHowWeHelpItems((previous) =>
+            previous.map((item) => {
+                if (item.key !== itemKey) {
+                    return item;
+                }
+
+                if (item.image_url?.startsWith('blob:')) {
+                    URL.revokeObjectURL(item.image_url);
+                }
+
+                return {
+                    ...item,
+                    imageFile: file,
+                    image_url: URL.createObjectURL(file),
+                };
+            })
+        );
+    }
+
+    function removeHowWeHelpItem(itemKey) {
+        setHowWeHelpItems((previous) => {
+            const item = previous.find((entry) => entry.key === itemKey);
+
+            if (item?.id) {
+                setRemovedHowWeHelpItemIds((ids) => [...ids, item.id]);
+            }
+
+            if (item?.image_url?.startsWith('blob:')) {
+                URL.revokeObjectURL(item.image_url);
+            }
+
+            return normalizeHowWeHelpItems(previous.filter((entry) => entry.key !== itemKey));
+        });
+    }
+
+    function handleHowWeHelpDrop(targetKey) {
+        if (!draggedHowWeHelpKey || draggedHowWeHelpKey === targetKey) {
+            return;
+        }
+
+        setHowWeHelpItems((previous) => {
+            const next = [...previous];
+            const draggedIndex = next.findIndex((item) => item.key === draggedHowWeHelpKey);
+            const targetIndex = next.findIndex((item) => item.key === targetKey);
+
+            if (draggedIndex < 0 || targetIndex < 0) {
+                return previous;
+            }
+
+            const [moved] = next.splice(draggedIndex, 1);
+            next.splice(targetIndex, 0, moved);
+
+            return normalizeHowWeHelpItems(next);
+        });
+
+        setDraggedHowWeHelpKey(null);
+    }
+
     async function handleSaveHero(event) {
         event.preventDefault();
         setIsSaving(true);
@@ -630,6 +934,85 @@ export default function HomePageBuilder() {
             toast.success('Shop By Industry section updated successfully.');
         } catch (error) {
             toast.error(error.message || 'Failed to save shop by industry section.');
+        } finally {
+            setIsSaving(false);
+        }
+    }
+    async function handleSaveShopByProduct(event) {
+        event.preventDefault();
+        setIsSaving(true);
+
+        try {
+            await updateShopByProductSection({
+                title: shopByProductForm.title || '',
+                subtitle: shopByProductForm.subtitle || '',
+            });
+
+            if (removedShopByProductItemIds.length > 0) {
+                await Promise.all(
+                    removedShopByProductItemIds.map((id) => deleteShopByProductItem(id))
+                );
+            }
+
+            for (let index = 0; index < shopByProductItems.length; index += 1) {
+                const item = shopByProductItems[index];
+                const payload = {
+                    title: item.title || '',
+                    image: item.imageFile instanceof File ? item.imageFile : null,
+                    sort_order: index + 1,
+                };
+
+                if (item.id) {
+                    await updateShopByProductItem(item.id, payload);
+                } else {
+                    await createShopByProductItem(payload);
+                }
+            }
+
+            await loadShopByProductForEditor();
+            setPreviewKey((previous) => previous + 1);
+            toast.success('Shop By Product section updated successfully.');
+        } catch (error) {
+            toast.error(error.message || 'Failed to save shop by product section.');
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+
+
+    async function handleSaveHowWeHelp(event) {
+        event.preventDefault();
+        setIsSaving(true);
+
+        try {
+            await updateHowWeHelpSection(howWeHelpForm);
+
+            if (removedHowWeHelpItemIds.length > 0) {
+                await Promise.all(removedHowWeHelpItemIds.map((id) => deleteHowWeHelpItem(id)));
+            }
+
+            for (let index = 0; index < howWeHelpItems.length; index += 1) {
+                const item = howWeHelpItems[index];
+                const payload = {
+                    title: item.title || '',
+                    description: item.description || '',
+                    image: item.imageFile instanceof File ? item.imageFile : null,
+                    sort_order: index + 1,
+                };
+
+                if (item.id) {
+                    await updateHowWeHelpItem(item.id, payload);
+                } else {
+                    await createHowWeHelpItem(payload);
+                }
+            }
+
+            await loadHowWeHelpForEditor();
+            setPreviewKey((previous) => previous + 1);
+            toast.success('How We Help section updated successfully.');
+        } catch (error) {
+            toast.error(error.message || 'Failed to save How We Help section.');
         } finally {
             setIsSaving(false);
         }
@@ -1082,6 +1465,317 @@ export default function HomePageBuilder() {
         );
     }
 
+    function renderShopByProductEditor() {
+        return (
+            <form onSubmit={handleSaveShopByProduct} className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4">
+                    {isLoadingShopByProduct ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <LoaderCircle className="size-4 animate-spin" />
+                            Loading shop by product data...
+                        </div>
+                    ) : (
+                        <>
+                            <div className="space-y-2">
+                                <Label htmlFor="product-section-title">Section title</Label>
+                                <Input
+                                    id="product-section-title"
+                                    value={shopByProductForm.title}
+                                    onChange={(event) =>
+                                        setShopByProductForm((previous) => ({
+                                            ...previous,
+                                            title: event.target.value,
+                                        }))
+                                    }
+                                    placeholder="e.g. Shop By Product"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="product-section-subtitle">Section subtitle</Label>
+                                <Input
+                                    id="product-section-subtitle"
+                                    value={shopByProductForm.subtitle}
+                                    onChange={(event) =>
+                                        setShopByProductForm((previous) => ({
+                                            ...previous,
+                                            subtitle: event.target.value,
+                                        }))
+                                    }
+                                    placeholder="e.g. Explore products by category"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="text-xs text-muted-foreground">
+                                    Reorder cards by dragging. Each item has an image and title.
+                                </p>
+                                <Button type="button" size="sm" onClick={addShopByProductItem}>
+                                    <Plus className="size-4" />
+                                    Add item
+                                </Button>
+                            </div>
+
+                            <div className="space-y-3">
+                                {shopByProductItems.length === 0 ? (
+                                    <div className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+                                        No product items yet. Click Add item.
+                                    </div>
+                                ) : (
+                                    shopByProductItems.map((item, index) => (
+                                        <div
+                                            key={item.key}
+                                            draggable
+                                            onDragStart={() => setDraggedShopByProductKey(item.key)}
+                                            onDragOver={(event) => event.preventDefault()}
+                                            onDrop={() => handleShopByProductDrop(item.key)}
+                                            className="space-y-3 rounded-lg border border-border bg-card p-3"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="inline-flex items-center gap-2 text-sm font-semibold">
+                                                    <GripVertical className="size-4 text-muted-foreground" />
+                                                    Item {index + 1}
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    onClick={() => removeShopByProductItem(item.key)}
+                                                    aria-label="Remove product item"
+                                                >
+                                                    <Trash2 className="size-4 text-rose-600" />
+                                                </Button>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Card title</Label>
+                                                <Input
+                                                    value={item.title}
+                                                    onChange={(event) =>
+                                                        handleShopByProductFieldChange(
+                                                            item.key,
+                                                            'title',
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    placeholder="e.g. T-Shirts"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Card image</Label>
+                                                <Input
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/gif,image/webp"
+                                                    onChange={(event) =>
+                                                        handleShopByProductImageChange(
+                                                            item.key,
+                                                            event.target.files?.[0]
+                                                        )
+                                                    }
+                                                />
+                                                {item.image_url ? (
+                                                    <img
+                                                        src={item.image_url}
+                                                        alt={item.title || 'Product item'}
+                                                        className="h-24 w-full rounded object-cover"
+                                                    />
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                <SheetFooter className="border-t">
+                    <Button
+                        type="submit"
+                        disabled={isSaving || isLoadingShopByProduct}
+                        className="w-full"
+                    >
+                        {isSaving ? (
+                            <>
+                                <LoaderCircle className="size-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="size-4" />
+                                Save Shop By Product
+                            </>
+                        )}
+                    </Button>
+                </SheetFooter>
+            </form>
+        );
+    }
+
+    function renderHowWeHelpEditor() {
+        return (
+            <form onSubmit={handleSaveHowWeHelp} className="flex min-h-0 flex-1 flex-col">
+                <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-4 py-4">
+                    {isLoadingHowWeHelp ? (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <LoaderCircle className="size-4 animate-spin" />
+                            Loading How We Help data...
+                        </div>
+                    ) : (
+                        <>
+                            <div className="space-y-2">
+                                <Label htmlFor="help-section-title">Section title</Label>
+                                <Input
+                                    id="help-section-title"
+                                    value={howWeHelpForm.title}
+                                    onChange={(event) =>
+                                        setHowWeHelpForm((previous) => ({
+                                            ...previous,
+                                            title: event.target.value,
+                                        }))
+                                    }
+                                    placeholder="e.g. How we help"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="help-section-description">Section description</Label>
+                                <textarea
+                                    id="help-section-description"
+                                    value={howWeHelpForm.description}
+                                    onChange={(event) =>
+                                        setHowWeHelpForm((previous) => ({
+                                            ...previous,
+                                            description: event.target.value,
+                                        }))
+                                    }
+                                    placeholder="Describe how your business helps customers"
+                                    rows={4}
+                                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring"
+                                />
+                            </div>
+
+                            <div className="flex items-center justify-between gap-3">
+                                <p className="text-xs text-muted-foreground">
+                                    Drag cards to reorder them.
+                                </p>
+                                <Button type="button" size="sm" onClick={addHowWeHelpItem}>
+                                    <Plus className="size-4" />
+                                    Add item
+                                </Button>
+                            </div>
+
+                            <div className="space-y-3">
+                                {howWeHelpItems.length === 0 ? (
+                                    <div className="rounded-md border border-dashed border-border p-3 text-xs text-muted-foreground">
+                                        No help items yet. Click Add item.
+                                    </div>
+                                ) : (
+                                    howWeHelpItems.map((item, index) => (
+                                        <div
+                                            key={item.key}
+                                            draggable
+                                            onDragStart={() => setDraggedHowWeHelpKey(item.key)}
+                                            onDragOver={(event) => event.preventDefault()}
+                                            onDrop={() => handleHowWeHelpDrop(item.key)}
+                                            className="space-y-3 rounded-lg border border-border bg-card p-3"
+                                        >
+                                            <div className="flex items-center justify-between">
+                                                <div className="inline-flex items-center gap-2 text-sm font-semibold">
+                                                    <GripVertical className="size-4 text-muted-foreground" />
+                                                    Item {index + 1}
+                                                </div>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="icon-sm"
+                                                    onClick={() => removeHowWeHelpItem(item.key)}
+                                                    aria-label="Remove How We Help item"
+                                                >
+                                                    <Trash2 className="size-4 text-rose-600" />
+                                                </Button>
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Title</Label>
+                                                <Input
+                                                    value={item.title}
+                                                    onChange={(event) =>
+                                                        handleHowWeHelpFieldChange(
+                                                            item.key,
+                                                            'title',
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    placeholder="e.g. Consultation & Advice"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Description</Label>
+                                                <textarea
+                                                    value={item.description}
+                                                    onChange={(event) =>
+                                                        handleHowWeHelpFieldChange(
+                                                            item.key,
+                                                            'description',
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    placeholder="Describe this service"
+                                                    rows={3}
+                                                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-xs outline-none ring-offset-background placeholder:text-muted-foreground focus-visible:ring-1 focus-visible:ring-ring"
+                                                />
+                                            </div>
+
+                                            <div className="space-y-2">
+                                                <Label>Image</Label>
+                                                <Input
+                                                    type="file"
+                                                    accept="image/jpeg,image/png,image/gif,image/webp"
+                                                    onChange={(event) =>
+                                                        handleHowWeHelpImageChange(
+                                                            item.key,
+                                                            event.target.files?.[0]
+                                                        )
+                                                    }
+                                                />
+                                                {item.image_url ? (
+                                                    <img
+                                                        src={item.image_url}
+                                                        alt={item.title || 'How We Help item'}
+                                                        className="h-24 w-full rounded object-cover"
+                                                    />
+                                                ) : null}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+
+                <SheetFooter className="border-t">
+                    <Button type="submit" disabled={isSaving || isLoadingHowWeHelp} className="w-full">
+                        {isSaving ? (
+                            <>
+                                <LoaderCircle className="size-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="size-4" />
+                                Save How We Help
+                            </>
+                        )}
+                    </Button>
+                </SheetFooter>
+            </form>
+        );
+    }
+
     return (
         <>
             <section className="space-y-3">
@@ -1154,6 +1848,10 @@ export default function HomePageBuilder() {
                                 ? 'Manage feature repeater items with title, description, icon, and drag-drop order.'
                                 : activeEditor === 'shop-by-event'
                                     ? 'Manage section title, subtitle, and repeater cards with image + title ordering.'
+                                    : activeEditor === 'how-we-help'
+                                        ? 'Manage the section title, description, and repeater cards with image, title, and description.'
+                                        : activeEditor === 'shop-by-product'
+                                            ? 'Manage section title, subtitle, and product cards with image and title ordering.'
                                     : 'Update hero content and media repeater.'}
                         </SheetDescription>
                     </SheetHeader>
@@ -1162,6 +1860,10 @@ export default function HomePageBuilder() {
                         ? renderFeaturesEditor()
                         : activeEditor === 'shop-by-event'
                             ? renderShopByIndustryEditor()
+                            : activeEditor === 'how-we-help'
+                                ? renderHowWeHelpEditor()
+                                : activeEditor === 'shop-by-product'
+                                    ? renderShopByProductEditor()
                             : renderHeroEditor()}
                 </SheetContent>
             </Sheet>
