@@ -42,6 +42,13 @@ function buildHeroFormData(data = {}, asUpdate = false) {
     formData.append('title_font_family', data.title_font_family || '');
     formData.append('description_font_size', data.description_font_size || '');
     formData.append('description_font_family', data.description_font_family || '');
+    formData.append('ticker_text', data.ticker_text || '');
+    formData.append('sub_title', data.sub_title || '');
+    formData.append('button_text', data.button_text || '');
+
+    if (typeof data.button_enabled === 'boolean') {
+        formData.append('button_enabled', data.button_enabled ? '1' : '0');
+    }
 
     if (data.image instanceof File) {
         formData.append('image', data.image);
@@ -49,6 +56,24 @@ function buildHeroFormData(data = {}, asUpdate = false) {
 
     if (data.video instanceof File) {
         formData.append('video', data.video);
+    }
+
+    if (Array.isArray(data.existingSlides)) {
+        data.existingSlides.forEach((slide, index) => {
+            if (slide?.id) {
+                formData.append('existing_slide_ids[]', String(slide.id));
+                formData.append(`existing_slide_orders[${slide.id}]`, String(index + 1));
+            }
+        });
+    }
+
+    if (Array.isArray(data.newSlides)) {
+        data.newSlides.forEach((slide, index) => {
+            if (slide?.file instanceof File) {
+                formData.append('slides[]', slide.file);
+                formData.append('slide_orders[]', String(slide.sort_order || index + 1));
+            }
+        });
     }
 
     if (asUpdate) {

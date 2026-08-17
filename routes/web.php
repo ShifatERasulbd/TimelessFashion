@@ -7,6 +7,7 @@ use App\Http\Controllers\FeaturesController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CanadaWarehouseStockController;
 use App\Http\Controllers\ApiProductController;
+use App\Http\Controllers\ShopByIndustryController;
 use App\Http\Controllers\SubCategoryController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -63,6 +64,8 @@ Route::get('/personalizer/{path?}', function () {
 Route::prefix('api')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:6,1');
     Route::get('/public/hero', [HeroController::class, 'publicHero']);
+    Route::get('/public/features', [FeaturesController::class, 'publicIndex']);
+    Route::get('/public/shop-by-industry', [ShopByIndustryController::class, 'publicShow']);
     Route::post('/personalizations', [PersonalizationController::class, 'store']);
     Route::patch('/personalizations/{personalization}/confirm', [PersonalizationController::class, 'confirm']);
 
@@ -91,6 +94,13 @@ Route::prefix('api')->group(function () {
 
         // SubCategory Controller
         Route::apiResource('/sub-categories', SubCategoryController::class);
+
+        // Shop By Industry section + repeater items
+        Route::get('/shop-by-industry', [ShopByIndustryController::class, 'show']);
+        Route::put('/shop-by-industry', [ShopByIndustryController::class, 'updateSection']);
+        Route::post('/shop-by-industry/items', [ShopByIndustryController::class, 'storeItem']);
+        Route::put('/shop-by-industry/items/{item}', [ShopByIndustryController::class, 'updateItem']);
+        Route::delete('/shop-by-industry/items/{item}', [ShopByIndustryController::class, 'destroyItem']);
 
         // Inventory public API proxy (Canada warehouse)
         Route::get('/inventory/canada-warehouse-stocks', [CanadaWarehouseStockController::class, 'index']);

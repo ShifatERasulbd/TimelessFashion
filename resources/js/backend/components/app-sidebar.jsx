@@ -4,6 +4,7 @@ import {
     Sparkles,
     Blocks,
     LayoutList,
+    PanelsTopLeft,
     Package,
     LogOut
   
@@ -30,6 +31,7 @@ const homeItems = [
 ];
 
 const websiteItems = [
+    { title: 'Home Page Builder', icon: PanelsTopLeft, path: '/admin/website/home-page' },
     { title: 'Hero', icon: Sparkles, path: '/admin/hero' },
     { title: 'Features', icon: Blocks, path: '/admin/features' },
     { title: 'Categories', icon: LayoutList, path: '/admin/category' },

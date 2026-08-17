@@ -11,7 +11,12 @@ class Features extends Model
     protected $fillable =[
         'title',
         'description',
-        'icon'
+        'icon',
+        'sort_order',
+    ];
+
+    protected $casts = [
+        'sort_order' => 'integer',
     ];
 }
  

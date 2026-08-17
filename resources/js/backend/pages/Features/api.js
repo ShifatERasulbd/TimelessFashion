@@ -38,6 +38,7 @@ function buildFeatureFormData(data = {}, asUpdate = false) {
 
     formData.append('title', data.title || '');
     formData.append('description', data.description || '');
+    formData.append('sort_order', String(data.sort_order ?? 0));
 
     if (data.icon instanceof File) {
         formData.append('icon', data.icon);

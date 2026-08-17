@@ -19,9 +19,7 @@ export default function AboutPage() {
             <LazySection heightClass="h-[520px]">
                 <AboutHeroSection />
             </LazySection>
-            <LazySection heightClass="h-[300px]">
-                <Features />
-            </LazySection>
+           
             <LazySection heightClass="h-[520px]">
                 <TimelessAboutSection />
             </LazySection>

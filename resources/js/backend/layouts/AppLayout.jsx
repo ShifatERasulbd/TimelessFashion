@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
@@ -7,6 +7,7 @@ import { useAppContext } from '@/context/AppContext';
 
 export default function AppLayout() {
     const { pageTitle, user, setUser } = useAppContext();
+    const location = useLocation();
 
     useEffect(() => {
         let ignore = false;
@@ -44,15 +45,16 @@ export default function AppLayout() {
     }, [setUser, user]);
 
     const warehouseName = user?.warehouse?.name || 'No Warehouse Assigned';
+    const hideSidebar = location.pathname.startsWith('/admin/website/home-page');
 
     return (
         <SidebarProvider>
-            <AppSidebar />
+            {!hideSidebar && <AppSidebar />}
 
             <SidebarInset>
                 <header className="flex h-14 items-center justify-between border-b border-border bg-background px-4 md:px-6">
                     <div className="flex items-center gap-3">
-                        <SidebarTrigger className="md:hidden" />
+                        {!hideSidebar && <SidebarTrigger className="md:hidden" />}
                         <h1 className="text-sm font-semibold md:text-base">{pageTitle}</h1>
                     </div>
 

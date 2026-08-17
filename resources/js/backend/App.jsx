@@ -57,6 +57,9 @@ const SubCategories = lazyWithRetry(() => import('@/pages/SubCategory/subcategor
 const AddSubCategory = lazyWithRetry(() => import('@/pages/SubCategory/addSubCategory'), 'add-sub-category');
 const EditSubCategory = lazyWithRetry(() => import('@/pages/SubCategory/editSubCategory'), 'edit-sub-category');
 
+// Website Builder
+const HomePageBuilder = lazyWithRetry(() => import('@/pages/Website/homePageBuilder'), 'website-home-page-builder');
+
 
 
 // Product Management
@@ -107,6 +110,9 @@ export default function App() {
                             <Route path="sub-category" element={<SubCategories />} />
                             <Route path="sub-category/add" element={<AddSubCategory />} />
                             <Route path="sub-category/:id/edit" element={<EditSubCategory />} />
+
+                            {/* Website Builder */}
+                            <Route path="website/home-page" element={<HomePageBuilder />} />
 
 
                             {/* Product Management */}

@@ -2,36 +2,68 @@ const aboutImage = '/uploads/heroes/images/hero1.webp';
 
 export default function TimelessAboutSection() {
     return (
-        <section className="bg-[#ececec] py-14 sm:py-16 lg:py-20">
-            <div className="mx-auto w-full max-w-[1540px] px-5 sm:px-8 lg:px-12">
-                <div className="bg-[#dfdfdf] px-5 py-6 sm:px-10 sm:py-10 lg:px-14 lg:py-12">
-                    <article className="grid items-center gap-8 lg:grid-cols-[1.02fr_1fr] lg:gap-14 xl:gap-20">
-                        <div className="bg-[#f1f1f1] p-3 sm:p-4 lg:p-5">
-                            <img
-                                src={aboutImage}
-                                alt="Timeless apparel collection"
-                                className="h-[270px] w-full object-cover object-center sm:h-[390px] lg:h-[520px]"
-                            />
-                        </div>
+        <section className="bg-white py-10 sm:py-14 lg:py-16">
+            <div className="mx-auto w-full max-w-[1100px] px-5 sm:px-8 lg:px-10">
+                <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[380px_1fr] lg:gap-14 xl:grid-cols-[390px_1fr] xl:gap-16">
 
-                        <div className="px-1 sm:px-2 lg:px-0">
-                            <p className="text-[0.8rem] uppercase tracking-[0.08em] text-slate-600">
-                                About Timeless Fashion
-                            </p>
+                    {/* Image */}
+                    <div className="w-full border border-zinc-200 bg-white p-2 shadow-[0_1px_6px_rgba(0,0,0,0.04)]">
+                        <img
+                            src={aboutImage}
+                            alt="Timeless apparel collection"
+                            className="
+                                block
+                                h-[260px]
+                                w-full
+                                object-cover
+                                object-center
+                                sm:h-[290px]
+                            "
+                        />
+                    </div>
 
-                            <h2 className="mt-5 font-serif text-[clamp(2rem,3.8vw,3.4rem)] leading-[1.05] tracking-[0.01em] text-zinc-900">
-                                Fashion Designed Around Identity,
-                                <span className="block">Creativity & Comfort</span>
-                            </h2>
+                    {/* Content */}
+                    <div className="max-w-[600px]">
+                        <p className="text-[9px] font-medium uppercase tracking-[0.16em] text-zinc-500 sm:text-[10px]">
+                            ABOUT TIMELESS FASHION
+                        </p>
 
-                            <p className="mt-6 max-w-[42ch] text-[1rem] leading-8 text-slate-600 sm:text-[1.06rem]">
-                                At Timeless Fashion, we create premium apparel designed for comfort,
-                                individuality, and everyday style. With a focus on quality craftsmanship
-                                and modern customization, every piece is made to help you express your
-                                identity with confidence.
-                            </p>
-                        </div>
-                    </article>
+                        <h2
+                            className="
+                                mt-3
+                                max-w-[560px]
+                                font-serif
+                                text-[26px]
+                                font-normal
+                                leading-[1.02]
+                                tracking-[-0.015em]
+                                text-zinc-900
+                                sm:text-[30px]
+                                lg:text-[31px]
+                            "
+                        >
+                            Fashion Designed Around Identity, Creativity &amp;
+                            Comfort
+                        </h2>
+
+                        <p
+                            className="
+                                mt-3
+                                max-w-[560px]
+                                text-[12px]
+                                leading-[1.45]
+                                text-zinc-600
+                                sm:text-[13px]
+                                lg:text-[13px]
+                            "
+                        >
+                            At Timeless Fashion, we create premium apparel
+                            designed for comfort, individuality, and everyday
+                            style. Crafted with premium quality and modern
+                            customization, every piece empowers you to express
+                            your identity with confidence.
+                        </p>
+                    </div>
                 </div>
             </div>
         </section>

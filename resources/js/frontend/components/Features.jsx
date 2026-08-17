@@ -1,45 +1,65 @@
-import { Gift, RefreshCcw, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 import { featuresFontClass } from '../../utils/typography';
 
-const featureItems = [
-    {
-        icon: Sparkles,
-        title: 'Premium Quality Materials',
-        description: 'Durable fabrics designed for comfort and long-term use.',
-    },
-    {
-        icon: SlidersHorizontal,
-        title: 'Personalized Products',
-        description: 'Customize designs, colors, and details to match your identity.',
-    },
-    {
-        icon: RefreshCcw,
-        title: 'Small Order Solutions',
-        description: 'Efficient small quantity delivery with customized logo',
-    },
-    {
-        icon: Gift,
-        title: 'Bulk Order Solutions',
-        description: 'Efficient production and scalable solutions for businesses of all sizes.',
-    },
-];
-
 export default function Features() {
+    const [featureItems, setFeatureItems] = useState([]);
+
+    useEffect(() => {
+        let ignore = false;
+
+        async function loadFeatures() {
+            try {
+                const response = await fetch('/api/public/features', {
+                    headers: { Accept: 'application/json' },
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                if (!ignore) {
+                    setFeatureItems(Array.isArray(payload) ? payload : []);
+                }
+            } catch {
+                // Keep section resilient if API is unavailable.
+            }
+        }
+
+        loadFeatures();
+
+        return () => {
+            ignore = true;
+        };
+    }, []);
+
+    if (!featureItems.length) {
+        return <section id="home-features-section" className="py-1" />;
+    }
+
     return (
-        <section className={`${featuresFontClass} bg-[#F9F9F8] py-5 sm:py-5`}>
+        <section id="home-features-section" className={`${featuresFontClass} bg-[#F9F9F8] py-5 sm:py-5`}>
             <div className="mx-auto w-full max-w-[1700px] px-6 sm:px-8 lg:px-12">
                 <div className="grid grid-cols-1 gap-12 sm:grid-cols-2 xl:grid-cols-4 xl:gap-8">
-                    {featureItems.map(({ icon: Icon, title, description }) => (
-                        <article key={title} className="mx-auto max-w-sm text-center">
+                    {featureItems.map((feature) => (
+                        <article key={feature.id} className="mx-auto max-w-sm text-center">
                             <div className="mb-4 flex justify-center text-amber-700">
-                                <Icon className="size-6" strokeWidth={1.7} />
+                                {feature.icon_url ? (
+                                    <img
+                                        src={feature.icon_url}
+                                        alt={feature.title || 'Feature icon'}
+                                        className="size-6 object-contain"
+                                    />
+                                ) : (
+                                    <span className="inline-flex size-2 rounded-full bg-amber-700" />
+                                )}
                             </div>
                             <h3 className="text-[1.35rem] font-normal tracking-wide text-zinc-900">
-                                {title}
+                                {feature.title || ''}
                             </h3>
                             <p className="mx-auto mt-2.5 max-w-[28ch] text-[0.95rem] leading-relaxed text-zinc-600">
-                                {description}
+                                {feature.description || ''}
                             </p>
                         </article>
                     ))}

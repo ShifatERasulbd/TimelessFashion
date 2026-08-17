@@ -18,17 +18,27 @@ class Hero extends Model
         'description_font_family',
         'image',
         'video',
+        'ticker_text',
+        'sub_title',
+        'button_enabled',
+        'button_text',
     ];
 
     protected $casts = [
         'title_font_size' => 'integer',
         'description_font_size' => 'integer',
+        'button_enabled' => 'boolean',
     ];
 
     protected $appends = [
         'image_url',
         'video_url',
     ];
+
+    public function slides()
+    {
+        return $this->hasMany(HeroSlide::class)->orderBy('sort_order')->orderBy('id');
+    }
 
     public function getImageUrlAttribute(): ?string
     {

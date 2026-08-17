@@ -1,4 +1,5 @@
 import { Menu, Search, ShoppingCart, SlidersHorizontal, UserRound } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { timelessFontClass } from '../../utils/typography';
@@ -38,12 +39,45 @@ const utilityIcons = [
 ];
 
 export default function Header() {
+    const [tickerText, setTickerText] = useState('');
+
+    useEffect(() => {
+        let ignore = false;
+
+        async function loadHeroTicker() {
+            try {
+                const response = await fetch('/api/public/hero', {
+                    headers: { Accept: 'application/json' },
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                if (!ignore) {
+                    setTickerText(payload?.ticker_text || '');
+                }
+            } catch {
+                // Keep header stable if ticker cannot be loaded.
+            }
+        }
+
+        loadHeroTicker();
+
+        return () => {
+            ignore = true;
+        };
+    }, []);
+
     return (
         <header className={`${timelessFontClass} sticky top-0 z-50 w-full text-zinc-950`}>
             {/* Top Announcement Bar */}
-            <div className="bg-[#e65c00] px-4 py-2 text-center text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-white sm:text-[0.75rem]">
-                Free shipping on orders over $150 — Custom branding available on every product
-            </div>
+            {tickerText ? (
+                <div className="bg-[#e65c00] px-4 py-2 text-center text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-white sm:text-[0.75rem]">
+                    {tickerText}
+                </div>
+            ) : null}
 
             {/* Main Header Container */}
             <div className="border-b border-zinc-200 bg-[#f4f4f4] backdrop-blur">
